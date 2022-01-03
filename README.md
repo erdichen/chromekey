@@ -33,6 +33,14 @@ sudo strip /usr/local/bin/chromekey
 
 ```
 sudo tee /etc/udev/rules.d/99-chromekey.rules <<EOF
-ACTION=="add", ATTRS{name}=="AT Translated Set 2 keyboard", RUN+="/bin/sh -c '/usr/local/bin/chromekey &'"
+ACTION=="add", ATTRS{name}=="AT Translated Set 2 keyboard", TAG+="systemd", ENV{SYSTEMD_WANTS}="chromekey.service"
+EOF
+```
+
+```
+sudo tee /etc/systemd/system/chromekey.service <<EOF
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/chromekey
 EOF
 ```
