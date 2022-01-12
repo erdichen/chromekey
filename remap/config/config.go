@@ -66,7 +66,7 @@ func ToPBConfig(cfg RunConfig) *KeymapConfig {
 
 func DefaultRunConfig() RunConfig {
 	return RunConfig{
-		FnKey:       keycode.Code_KEY_FN,
+		FnKey:       keycode.Code_KEY_F13,
 		KeyMap:      defaultFnKeyMap(),
 		ShiftKeyMap: defaultShiftKeyMap(),
 	}

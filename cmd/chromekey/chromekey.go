@@ -69,14 +69,8 @@ func main() {
 	}
 
 	if *dumpConfig {
-		var pb = config.KeymapConfig{
-			FnEnabled: cfg.FnENabled,
-			FnKey:     keycode.Code_KEY_FN,
-		}
-		pb.KeyMap = config.ToPBKeymap(cfg.KeyMap)
-		pb.ShiftKeyMap = config.ToPBKeymap(cfg.ShiftKeyMap)
-
-		if _, err := os.Stdout.WriteString((prototext.MarshalOptions{Indent: "  "}).Format(&pb)); err != nil {
+		pb := config.ToPBConfig(cfg)
+		if _, err := os.Stdout.WriteString((prototext.MarshalOptions{Indent: "  "}).Format(pb)); err != nil {
 			log.Fatal(err)
 		}
 		return
