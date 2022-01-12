@@ -30,6 +30,7 @@ func main() {
 	grab := flag.Bool("grab", true, "Grab input")
 	cfgFile := flag.String("config_file", "", "Configuration file")
 	dumpConfig := flag.Bool("dump_config", false, "Dump configuration file")
+	defaultConfig := flag.Bool("default_config", true, "Use default configuration if config_file is not set")
 	flag.Func("fnkey", "Keycode of the FN key", func(value string) error {
 		key, ok := keycode.Code_value[value]
 		if !ok {
@@ -46,12 +47,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s, err := remap.New(ctx, *devicePath, *uinputDev, fnKey, *grab)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer s.Close()
-	remap.SetVerbosity(*verbosity)
+	var cfg config.RunConfig
 
 	if *cfgFile != "" {
 		b, err := ioutil.ReadFile(*cfgFile)
@@ -62,21 +58,17 @@ func main() {
 		if err := prototext.Unmarshal(b, &pb); err != nil {
 			log.Fatal(err)
 		}
-		var cfg = remap.KeymapConfig{
+		cfg = config.RunConfig{
 			FnENabled:   pb.FnEnabled,
 			FnKey:       keycode.Code(pb.FnKey),
 			KeyMap:      config.FromPBKeymap(pb.KeyMap),
 			ShiftKeyMap: config.FromPBKeymap(pb.ShiftKeyMap),
 		}
-		if fnKey != keycode.Code_KEY_RESERVED {
-			// Overrides FN key in config from flag value.
-			cfg.FnKey = fnKey
-		}
-		s.SetConfig(cfg)
+	} else if *defaultConfig {
+		cfg = config.DefaultRunConfig()
 	}
 
 	if *dumpConfig {
-		cfg := s.Config()
 		var pb = config.KeymapConfig{
 			FnEnabled: cfg.FnENabled,
 			FnKey:     keycode.Code_KEY_FN,
@@ -87,7 +79,20 @@ func main() {
 		if _, err := os.Stdout.WriteString((prototext.MarshalOptions{Indent: "  "}).Format(&pb)); err != nil {
 			log.Fatal(err)
 		}
+		return
 	}
+
+	if fnKey != keycode.Code_KEY_RESERVED {
+		// Overrides FN key in config from flag value.
+		cfg.FnKey = fnKey
+	}
+
+	s, err := remap.New(ctx, *devicePath, *uinputDev, cfg, *grab)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer s.Close()
+	remap.SetVerbosity(*verbosity)
 
 	if err := s.Start(ctx, sigC, *timeout); err != nil {
 		log.Fatal(err)

@@ -72,3 +72,11 @@ shift_key_map:  {
   from:  KEY_F6
   to:  KEY_KBDILLUMDOWN
 }
+shift_key_map:  {
+  from:  KEY_LEFTMETA
+  to:  KEY_CAPSLOCK
+}
+shift_key_map: {
+  from: KEY_TAB
+  to: KEY_NUMLOCK
+}

@@ -66,7 +66,7 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	evTypes := []eventcode.EventType{eventcode.EV_SYN, eventcode.EV_KEY, eventcode.EV_MSC}
+	evTypes := []eventcode.EventType{eventcode.EV_SYN, eventcode.EV_KEY, eventcode.EV_MSC, eventcode.EV_LED}
 	for _, t := range evTypes {
 		if err := unix.IoctlSetInt(int(f.Fd()), UI_SET_EVBIT, int(t)); err != nil {
 			return nil, err
@@ -75,6 +75,12 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 
 	if err := unix.IoctlSetInt(int(f.Fd()), UI_SET_MSCBIT, int(eventcode.MSC_SCAN)); err != nil {
 		return nil, err
+	}
+
+	for i := 0; i < int(eventcode.LED_CNT); i++ {
+		if err := unix.IoctlSetInt(int(f.Fd()), UI_SET_LEDBIT, i); err != nil {
+			return nil, err
+		}
 	}
 
 	keyBits.Set(keycode.Code_KEY_BACK, true)

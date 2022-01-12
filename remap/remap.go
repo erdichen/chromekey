@@ -10,32 +10,9 @@ import (
 	"erdi.us/chromekey/evdev"
 	"erdi.us/chromekey/evdev/eventcode"
 	"erdi.us/chromekey/evdev/keycode"
+	"erdi.us/chromekey/remap/config"
 	"erdi.us/chromekey/uinput"
 )
-
-type KeymapConfig struct {
-	FnENabled   bool                          `json:"fn_enabled"`
-	FnKey       keycode.Code                  `json:"fn_key"`
-	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
-	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
-}
-
-func (cfg KeymapConfig) Clone() KeymapConfig {
-	keyMap := make(map[keycode.Code]keycode.Code)
-	for k, v := range cfg.KeyMap {
-		keyMap[k] = v
-	}
-	shiftKeyMap := make(map[keycode.Code]keycode.Code)
-	for k, v := range cfg.ShiftKeyMap {
-		shiftKeyMap[k] = v
-	}
-	return KeymapConfig{
-		FnENabled:   cfg.FnENabled,
-		FnKey:       cfg.FnKey,
-		KeyMap:      keyMap,
-		ShiftKeyMap: shiftKeyMap,
-	}
-}
 
 type State struct {
 	in  *evdev.Device
@@ -47,10 +24,10 @@ type State struct {
 	lastKey  keycode.Code
 	keys     keycode.KeyBits
 
-	cfg KeymapConfig
+	cfg config.RunConfig
 }
 
-func New(ctx context.Context, inputDev, outputDev string, fnKey keycode.Code, grab bool) (*State, error) {
+func New(ctx context.Context, inputDev, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
 	ok := false
 
 	in, err := evdev.OpenDevice(inputDev)
@@ -85,19 +62,11 @@ func New(ctx context.Context, inputDev, outputDev string, fnKey keycode.Code, gr
 
 	evC := startReadEventsLoop(ctx, in)
 
-	if fnKey == keycode.Code_KEY_RESERVED {
-		fnKey = keycode.Code_KEY_F13
-	}
-
 	ok = true
 	return &State{in: in, out: out, evC: evC,
 		grabbed:  grab,
 		fnEnable: true,
-		cfg: KeymapConfig{
-			FnKey:       fnKey,
-			KeyMap:      defaultFnKeyMap(),
-			ShiftKeyMap: defaultShiftKeyMap(),
-		},
+		cfg:      cfg,
 	}, nil
 }
 
@@ -114,11 +83,11 @@ func (s *State) Close() error {
 	return nil
 }
 
-func (s *State) Config() KeymapConfig {
+func (s *State) Config() config.RunConfig {
 	return s.cfg.Clone()
 }
 
-func (s *State) SetConfig(cfg KeymapConfig) {
+func (s *State) SetConfig(cfg config.RunConfig) {
 	s.cfg = cfg.Clone()
 	s.fnEnable = cfg.FnENabled
 }
@@ -193,6 +162,15 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 					if verbosity > 0 {
 						log.Printf("FN %v", s.fnEnable)
 					}
+					v := int32(0)
+					if s.fnEnable {
+						v = 1
+					}
+					post = append(post, evdev.InputEvent{
+						Type:  uint16(eventcode.EV_LED),
+						Code:  uint16(eventcode.LED_NUML),
+						Value: v,
+					})
 				}
 				events[i].Code = uint16(keycode.Code_KEY_FN)
 			default:

@@ -1,4 +1,4 @@
-package remap
+package config
 
 import "erdi.us/chromekey/evdev/keycode"
 
@@ -30,5 +30,8 @@ func defaultShiftKeyMap() map[keycode.Code]keycode.Code {
 
 		keycode.Code_KEY_BRIGHTNESSDOWN: keycode.Code_KEY_KBDILLUMDOWN,
 		keycode.Code_KEY_BRIGHTNESSUP:   keycode.Code_KEY_KBDILLUMUP,
+
+		keycode.Code_KEY_LEFTMETA: keycode.Code_KEY_CAPSLOCK,
+		keycode.Code_KEY_TAB:      keycode.Code_KEY_NUMLOCK,
 	}
 }

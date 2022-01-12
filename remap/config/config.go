@@ -20,3 +20,54 @@ func ToPBKeymap(from map[keycode.Code]keycode.Code) (to []*KeymapEntry) {
 	}
 	return
 }
+
+type RunConfig struct {
+	FnENabled   bool                          `json:"fn_enabled"`
+	FnKey       keycode.Code                  `json:"fn_key"`
+	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
+	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
+}
+
+func (cfg RunConfig) Clone() RunConfig {
+	keyMap := make(map[keycode.Code]keycode.Code)
+	for k, v := range cfg.KeyMap {
+		keyMap[k] = v
+	}
+	shiftKeyMap := make(map[keycode.Code]keycode.Code)
+	for k, v := range cfg.ShiftKeyMap {
+		shiftKeyMap[k] = v
+	}
+	return RunConfig{
+		FnENabled:   cfg.FnENabled,
+		FnKey:       cfg.FnKey,
+		KeyMap:      keyMap,
+		ShiftKeyMap: shiftKeyMap,
+	}
+}
+
+func FromPBConfig(pb *KeymapConfig) RunConfig {
+	return RunConfig{
+		FnENabled:   pb.FnEnabled,
+		FnKey:       pb.FnKey,
+		KeyMap:      FromPBKeymap(pb.KeyMap),
+		ShiftKeyMap: FromPBKeymap(pb.ShiftKeyMap),
+	}
+}
+
+func ToPBConfig(cfg RunConfig) *KeymapConfig {
+	pb := KeymapConfig{
+		FnEnabled:   cfg.FnENabled,
+		FnKey:       cfg.FnKey,
+		KeyMap:      ToPBKeymap(cfg.KeyMap),
+		ShiftKeyMap: ToPBKeymap(cfg.ShiftKeyMap),
+	}
+	return &pb
+}
+
+func DefaultRunConfig() RunConfig {
+	return RunConfig{
+		FnKey:       keycode.Code_KEY_FN,
+		KeyMap:      defaultFnKeyMap(),
+		ShiftKeyMap: defaultShiftKeyMap(),
+	}
+}
