@@ -38,7 +38,7 @@ func typename(typ uint16) string {
 func codename(typ uint16, code uint16) string {
 	switch eventcode.EventType(typ) {
 	case eventcode.EV_KEY:
-		return keycode.Key(code).String()
+		return keycode.Code(code).String()
 	case eventcode.EV_MSC:
 		return eventcode.MiscEvent(code).String()
 	case eventcode.EV_SYN:

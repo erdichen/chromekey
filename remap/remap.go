@@ -13,6 +13,30 @@ import (
 	"erdi.us/chromekey/uinput"
 )
 
+type KeymapConfig struct {
+	FnENabled   bool                          `json:"fn_enabled"`
+	FnKey       keycode.Code                  `json:"fn_key"`
+	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
+	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
+}
+
+func (cfg KeymapConfig) Clone() KeymapConfig {
+	keyMap := make(map[keycode.Code]keycode.Code)
+	for k, v := range cfg.KeyMap {
+		keyMap[k] = v
+	}
+	shiftKeyMap := make(map[keycode.Code]keycode.Code)
+	for k, v := range cfg.ShiftKeyMap {
+		shiftKeyMap[k] = v
+	}
+	return KeymapConfig{
+		FnENabled:   cfg.FnENabled,
+		FnKey:       cfg.FnKey,
+		KeyMap:      keyMap,
+		ShiftKeyMap: shiftKeyMap,
+	}
+}
+
 type State struct {
 	in  *evdev.Device
 	out *uinput.Device
@@ -20,12 +44,13 @@ type State struct {
 
 	grabbed  bool
 	fnEnable bool
-	fnKey    keycode.Key
-	lastKey  keycode.Key
+	lastKey  keycode.Code
 	keys     keycode.KeyBits
+
+	cfg KeymapConfig
 }
 
-func New(ctx context.Context, inputDev, outputDev string, fnEnable bool, fnKey keycode.Key, grab bool) (*State, error) {
+func New(ctx context.Context, inputDev, outputDev string, fnKey keycode.Code, grab bool) (*State, error) {
 	ok := false
 
 	in, err := evdev.OpenDevice(inputDev)
@@ -60,8 +85,20 @@ func New(ctx context.Context, inputDev, outputDev string, fnEnable bool, fnKey k
 
 	evC := startReadEventsLoop(ctx, in)
 
+	if fnKey == keycode.Code_KEY_RESERVED {
+		fnKey = keycode.Code_KEY_F13
+	}
+
 	ok = true
-	return &State{in: in, out: out, evC: evC, fnEnable: fnEnable, fnKey: fnKey, grabbed: grab}, nil
+	return &State{in: in, out: out, evC: evC,
+		grabbed:  grab,
+		fnEnable: true,
+		cfg: KeymapConfig{
+			FnKey:       fnKey,
+			KeyMap:      defaultFnKeyMap(),
+			ShiftKeyMap: defaultShiftKeyMap(),
+		},
+	}, nil
 }
 
 func (s *State) Close() error {
@@ -75,6 +112,15 @@ func (s *State) Close() error {
 		return err
 	}
 	return nil
+}
+
+func (s *State) Config() KeymapConfig {
+	return s.cfg.Clone()
+}
+
+func (s *State) SetConfig(cfg KeymapConfig) {
+	s.cfg = cfg.Clone()
+	s.fnEnable = cfg.FnENabled
 }
 
 func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Duration) error {
@@ -112,34 +158,7 @@ func SetVerbosity(v int) {
 	verbosity = v
 }
 
-var fnKeys = map[keycode.Key]keycode.Key{
-	keycode.KEY_F1:  keycode.KEY_BACK,
-	keycode.KEY_F2:  keycode.KEY_FORWARD,
-	keycode.KEY_F3:  keycode.KEY_REFRESH,
-	keycode.KEY_F4:  keycode.KEY_F11,
-	keycode.KEY_F5:  keycode.KEY_SEARCH,
-	keycode.KEY_F6:  keycode.KEY_BRIGHTNESSDOWN,
-	keycode.KEY_F7:  keycode.KEY_BRIGHTNESSUP,
-	keycode.KEY_F8:  keycode.KEY_MUTE,
-	keycode.KEY_F9:  keycode.KEY_VOLUMEDOWN,
-	keycode.KEY_F10: keycode.KEY_VOLUMEUP,
-
-	keycode.KEY_BRIGHTNESSDOWN: keycode.KEY_KBDILLUMDOWN,
-	keycode.KEY_BRIGHTNESSUP:   keycode.KEY_KBDILLUMUP,
-
-	keycode.KEY_VOLUMEDOWN: keycode.KEY_KBDILLUMDOWN,
-	keycode.KEY_VOLUMEUP:   keycode.KEY_KBDILLUMUP,
-}
-
-var fnShiftKeys = map[keycode.Key]keycode.Key{
-	keycode.KEY_F6: keycode.KEY_KBDILLUMDOWN,
-	keycode.KEY_F7: keycode.KEY_KBDILLUMUP,
-
-	keycode.KEY_BRIGHTNESSDOWN: keycode.KEY_KBDILLUMDOWN,
-	keycode.KEY_BRIGHTNESSUP:   keycode.KEY_KBDILLUMUP,
-}
-
-func (s *State) genKey(key keycode.Key, value int32) []evdev.InputEvent {
+func (s *State) genKey(key keycode.Code, value int32) []evdev.InputEvent {
 	return []evdev.InputEvent{
 		{
 			Type:  uint16(eventcode.EV_MSC),
@@ -166,48 +185,48 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 		}
 		switch eventcode.EventType(ev.Type) {
 		case eventcode.EV_KEY:
-			s.keys.Set(keycode.Key(ev.Code), ev.Value != 0)
-			switch keycode.Key(ev.Code) {
-			case s.fnKey:
-				if ev.Value == 0 && s.lastKey == s.fnKey {
+			s.keys.Set(keycode.Code(ev.Code), ev.Value != 0)
+			switch keycode.Code(ev.Code) {
+			case s.cfg.FnKey:
+				if ev.Value == 0 && s.lastKey == s.cfg.FnKey {
 					s.fnEnable = !s.fnEnable
 					if verbosity > 0 {
 						log.Printf("FN %v", s.fnEnable)
 					}
 				}
-				events[i].Code = uint16(keycode.KEY_FN)
+				events[i].Code = uint16(keycode.Code_KEY_FN)
 			default:
-				isShiftDown := s.keys.Get(keycode.KEY_LEFTSHIFT) || s.keys.Get(keycode.KEY_RIGHTSHIFT)
+				isShiftDown := s.keys.Get(keycode.Code_KEY_LEFTSHIFT) || s.keys.Get(keycode.Code_KEY_RIGHTSHIFT)
 				if isShiftDown {
-					if key, ok := fnShiftKeys[keycode.Key(ev.Code)]; ok {
-						fnDown := s.keys.Get(s.fnKey)
+					if key, ok := s.cfg.ShiftKeyMap[keycode.Code(ev.Code)]; ok {
+						fnDown := s.keys.Get(s.cfg.FnKey)
 						if fnDown {
 							// Clear the shift keys to simulate the mapped key with the shift keys released.
-							if s.keys.Get(keycode.KEY_LEFTSHIFT) {
-								pre = append(pre, s.genKey(keycode.KEY_LEFTSHIFT, 0)...)
-								post = append(post, s.genKey(keycode.KEY_LEFTSHIFT, 1)...)
+							if s.keys.Get(keycode.Code_KEY_LEFTSHIFT) {
+								pre = append(pre, s.genKey(keycode.Code_KEY_LEFTSHIFT, 0)...)
+								post = append(post, s.genKey(keycode.Code_KEY_LEFTSHIFT, 1)...)
 							}
-							if s.keys.Get(keycode.KEY_RIGHTSHIFT) {
-								pre = append(pre, s.genKey(keycode.KEY_RIGHTSHIFT, 0)...)
-								post = append(post, s.genKey(keycode.KEY_RIGHTSHIFT, 1)...)
+							if s.keys.Get(keycode.Code_KEY_RIGHTSHIFT) {
+								pre = append(pre, s.genKey(keycode.Code_KEY_RIGHTSHIFT, 0)...)
+								post = append(post, s.genKey(keycode.Code_KEY_RIGHTSHIFT, 1)...)
 							}
 							events[i].Code = uint16(key)
 							if verbosity > 0 {
-								log.Printf("Map %v to %v", keycode.Key(ev.Code), key)
+								log.Printf("Map %v to %v", keycode.Code(ev.Code), key)
 							}
 						}
 					}
-				} else if key, ok := fnKeys[keycode.Key(ev.Code)]; ok {
-					fnDown := s.keys.Get(s.fnKey)
+				} else if key, ok := s.cfg.KeyMap[keycode.Code(ev.Code)]; ok {
+					fnDown := s.keys.Get(s.cfg.FnKey)
 					if s.fnEnable != fnDown {
 						events[i].Code = uint16(key)
 						if verbosity > 0 {
-							log.Printf("Map %v to %v", keycode.Key(ev.Code), key)
+							log.Printf("Map %v to %v", keycode.Code(ev.Code), key)
 						}
 					}
 				}
 			}
-			s.lastKey = keycode.Key(ev.Code)
+			s.lastKey = keycode.Code(ev.Code)
 		}
 	}
 	if pre != nil {
@@ -240,7 +259,7 @@ func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.Inp
 }
 
 func waitAllKeyReleased(in *evdev.Device) error {
-	bits := make([]byte, (keycode.KEY_CNT+7)/8)
+	bits := make([]byte, (keycode.Code_KEY_CNT+7)/8)
 	for {
 		if err := in.GetKeyStates(bits); err != nil {
 			return err

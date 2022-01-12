@@ -1,8 +1,8 @@
 package keycode
 
-type KeyBits [(KEY_CNT + 7) / 8]byte
+type KeyBits [(Code_KEY_CNT + 7) / 8]byte
 
-func (kb *KeyBits) Get(k Key) bool {
+func (kb *KeyBits) Get(k Code) bool {
 	bytes := int(k) / 8
 	if len(kb) < bytes {
 		return false
@@ -11,7 +11,7 @@ func (kb *KeyBits) Get(k Key) bool {
 	return (kb[bytes] & v) != 0
 }
 
-func (kb *KeyBits) Set(k Key, b bool) {
+func (kb *KeyBits) Set(k Code, b bool) {
 	bytes := int(k) / 8
 	if len(kb) < bytes {
 		return

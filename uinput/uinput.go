@@ -77,17 +77,17 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 		return nil, err
 	}
 
-	keyBits.Set(keycode.KEY_BACK, true)
-	keyBits.Set(keycode.KEY_FORWARD, true)
-	keyBits.Set(keycode.KEY_REFRESH, true)
-	keyBits.Set(keycode.KEY_SEARCH, true)
-	keyBits.Set(keycode.KEY_BRIGHTNESSDOWN, true)
-	keyBits.Set(keycode.KEY_BRIGHTNESSUP, true)
-	keyBits.Set(keycode.KEY_KBDILLUMDOWN, true)
-	keyBits.Set(keycode.KEY_KBDILLUMUP, true)
-	keyBits.Set(keycode.KEY_MUTE, true)
-	keyBits.Set(keycode.KEY_VOLUMEDOWN, true)
-	keyBits.Set(keycode.KEY_VOLUMEUP, true)
+	keyBits.Set(keycode.Code_KEY_BACK, true)
+	keyBits.Set(keycode.Code_KEY_FORWARD, true)
+	keyBits.Set(keycode.Code_KEY_REFRESH, true)
+	keyBits.Set(keycode.Code_KEY_SEARCH, true)
+	keyBits.Set(keycode.Code_KEY_BRIGHTNESSDOWN, true)
+	keyBits.Set(keycode.Code_KEY_BRIGHTNESSUP, true)
+	keyBits.Set(keycode.Code_KEY_KBDILLUMDOWN, true)
+	keyBits.Set(keycode.Code_KEY_KBDILLUMUP, true)
+	keyBits.Set(keycode.Code_KEY_MUTE, true)
+	keyBits.Set(keycode.Code_KEY_VOLUMEDOWN, true)
+	keyBits.Set(keycode.Code_KEY_VOLUMEUP, true)
 
 	for i, b := range keyBits {
 		for j := 0; j < 8; j++ {

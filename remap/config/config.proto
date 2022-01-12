@@ -1,0 +1,18 @@
+syntax = "proto3";
+package config;
+
+option go_package = "erdi.us/chromekey/remap/config";
+
+import "keycode.proto";
+
+message KeymapEntry {
+    keycode.Code from = 1;
+    keycode.Code to = 2;
+}
+
+message KeymapConfig {
+    bool fn_enabled = 1;
+    keycode.Code fn_key = 2;
+    repeated KeymapEntry key_map = 3;
+    repeated KeymapEntry shift_key_map = 4;
+}
