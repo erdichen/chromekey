@@ -3,7 +3,7 @@ package config;
 
 option go_package = "erdi.us/chromekey/remap/config";
 
-import "keycode.proto";
+import "evdev/keycode/keycode.proto";
 
 message KeymapEntry {
     keycode.Code from = 1;

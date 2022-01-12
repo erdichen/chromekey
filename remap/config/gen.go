@@ -1,3 +1,3 @@
 package config
 
-//go:generate protoc -I.:../../evdev/keycode --go_out=module=erdi.us/chromekey:../.. config.proto
+//go:generate protoc -I.:../.. --go_out=module=erdi.us/chromekey:../.. config.proto
