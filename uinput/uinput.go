@@ -1,8 +1,6 @@
 package uinput
 
 import (
-	"bytes"
-	"encoding/binary"
 	"os"
 	"syscall"
 	"unsafe"
@@ -23,13 +21,13 @@ type Setup struct {
 }
 
 // Marshal converts a Setup struct to binary bytes for ioctl use.
-func (dev *Setup) Marshal() []byte {
-	b := &bytes.Buffer{}
-	b.Write(dev.ID.Marshal())
-	b.Write(dev.Name[:])
-	binary.Write(b, binary.LittleEndian, &dev.FFEffectsMax)
-	return b.Bytes()
-}
+// func (s *Setup) Marshal() []byte {
+// 	b := &bytes.Buffer{}
+// 	b.Write(s.ID.Marshal())
+// 	b.Write(s.Name[:])
+// 	binary.Write(b, binary.LittleEndian, &s.FFEffectsMax)
+// 	return b.Bytes()
+// }
 
 // Device is a virtual keyboard device.
 type Device struct {
@@ -121,7 +119,7 @@ func (dev *Device) Close() error {
 func (dev *Device) WriteEvents(events []evdev.InputEvent) error {
 	b := make([]byte, evdev.EventSize*len(events))
 	for i, e := range events {
-		copy(b[i*evdev.EventSize:], e.Marshal())
+		copy(b[i*evdev.EventSize:], e.ToBytes())
 	}
 	_, err := dev.f.Write(b)
 	return err

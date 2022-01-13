@@ -13,8 +13,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const EventSize = 24
-
 type InputEvent struct {
 	Sec  uint
 	Usec uint
@@ -24,15 +22,21 @@ type InputEvent struct {
 	Value int32
 }
 
-func (ev *InputEvent) Marshal() []byte {
-	b := [EventSize]byte{}
-	binary.LittleEndian.PutUint64(b[:], uint64(ev.Sec))
-	binary.LittleEndian.PutUint64(b[8:], uint64(ev.Usec))
-	binary.LittleEndian.PutUint16(b[16:], ev.Type)
-	binary.LittleEndian.PutUint16(b[18:], ev.Code)
-	binary.LittleEndian.PutUint32(b[20:], uint32(ev.Value))
-	return b[:]
+const EventSize = int(unsafe.Sizeof(*(*InputEvent)(unsafe.Pointer(uintptr(0)))))
+
+func (ev *InputEvent) ToBytes() []byte {
+	return (*(*[EventSize]byte)(unsafe.Pointer(ev)))[:]
 }
+
+// func (ev *InputEvent) Marshal() []byte {
+// 	b := [EventSize]byte{}
+// 	binary.LittleEndian.PutUint64(b[:], uint64(ev.Sec))
+// 	binary.LittleEndian.PutUint64(b[8:], uint64(ev.Usec))
+// 	binary.LittleEndian.PutUint16(b[16:], ev.Type)
+// 	binary.LittleEndian.PutUint16(b[18:], ev.Code)
+// 	binary.LittleEndian.PutUint32(b[20:], uint32(ev.Value))
+// 	return b[:]
+// }
 
 func (ev *InputEvent) unmarshal(b []byte) (int, error) {
 	if len(b) < EventSize {
@@ -161,7 +165,7 @@ func (in *Device) SetLED(code keycode.LED, on bool) error {
 		Code:  uint16(code),
 		Value: v,
 	}
-	_, err := in.f.Write(ev.Marshal())
+	_, err := in.f.Write(ev.ToBytes())
 	return err
 }
 
@@ -172,11 +176,11 @@ type InputID struct {
 	Version uint16
 }
 
-func (id *InputID) Marshal() []byte {
-	b := [8]byte{}
-	binary.LittleEndian.PutUint16(b[:], id.BusType)
-	binary.LittleEndian.PutUint16(b[2:], id.Vendor)
-	binary.LittleEndian.PutUint16(b[4:], id.Product)
-	binary.LittleEndian.PutUint16(b[6:], id.Version)
-	return b[:]
-}
+// func (id *InputID) Marshal() []byte {
+// 	b := [8]byte{}
+// 	binary.LittleEndian.PutUint16(b[:], id.BusType)
+// 	binary.LittleEndian.PutUint16(b[2:], id.Vendor)
+// 	binary.LittleEndian.PutUint16(b[4:], id.Product)
+// 	binary.LittleEndian.PutUint16(b[6:], id.Version)
+// 	return b[:]
+// }

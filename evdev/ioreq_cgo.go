@@ -36,3 +36,11 @@ func EVIOCGKEY(len uint) uint {
 func EVIOCGLED(len uint) uint {
 	return uint(C._EVIOCGLED(C.uint(len)))
 }
+
+func structSizeMismatch()
+
+func init() {
+	if EventSize != 24 {
+		structSizeMismatch()
+	}
+}
