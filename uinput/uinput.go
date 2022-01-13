@@ -10,45 +10,19 @@ import (
 	"erdi.us/chromekey/evdev"
 	"erdi.us/chromekey/evdev/eventcode"
 	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/ioc"
 	"erdi.us/chromekey/log"
 	"golang.org/x/sys/unix"
 )
 
-const UInputMaxNameSize = 80
-
-const (
-	UINPUT_IOCTL_BASE = 'U'
-)
-
-var (
-	UI_DEV_CREATE  = ioc.IO(UINPUT_IOCTL_BASE, 1)
-	UI_DEV_DESTROY = ioc.IO(UINPUT_IOCTL_BASE, 2)
-
-	UI_DEV_SETUP = ioc.IOW(UINPUT_IOCTL_BASE, 3, 8+80+4)
-
-	// UI_ABS_SETUP            iow(UINPUT_IOCTL_BASE, 4, struct uinput_abs_setup)
-
-	UI_SET_EVBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 100, 4)
-	UI_SET_KEYBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 101, 4)
-	UI_SET_RELBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 102, 4)
-	UI_SET_ABSBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 103, 4)
-	UI_SET_MSCBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 104, 4)
-	UI_SET_LEDBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 105, 4)
-	UI_SET_SNDBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 106, 4)
-	UI_SET_FFBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 107, 4)
-	UI_SET_PHYS    = ioc.IOW(UINPUT_IOCTL_BASE, 108, 8)
-	UI_SET_SWBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 109, 4)
-	UI_SET_PROPBIT = ioc.IOW(UINPUT_IOCTL_BASE, 110, 4)
-)
-
+// Setup is a uinput device setup request info struct.
 type Setup struct {
 	ID   evdev.InputID
-	Name [UInputMaxNameSize]byte
+	Name [MaxNameSize]byte
 
 	FFEffectsMax uint32
 }
 
+// Marshal converts a Setup struct to binary bytes for ioctl use.
 func (dev *Setup) Marshal() []byte {
 	b := &bytes.Buffer{}
 	b.Write(dev.ID.Marshal())
@@ -57,10 +31,12 @@ func (dev *Setup) Marshal() []byte {
 	return b.Bytes()
 }
 
+// Device is a virtual keyboard device.
 type Device struct {
 	f *os.File
 }
 
+// CreateDevice creates a virtual keyboard device with the keycodes set in keyBits.
 func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 	f, err := os.OpenFile(device, os.O_RDWR|unix.O_NONBLOCK, 0644)
 	if err != nil {
@@ -123,6 +99,7 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 	return &Device{f: f}, nil
 }
 
+// CreateFromDevice creates a virtual keyboard devices that supports the same set of keycodes as an input device.
 func CreateFromDevice(device string, in *evdev.Device) (*Device, error) {
 	bits, err := in.GetKeyBits()
 	if err != nil {
@@ -132,6 +109,7 @@ func CreateFromDevice(device string, in *evdev.Device) (*Device, error) {
 	return CreateDevice(device, bits)
 }
 
+// Close closes the virtual keyboard devices.
 func (dev *Device) Close() error {
 	if _, err := unix.IoctlRetInt(int(dev.f.Fd()), UI_DEV_DESTROY); err != nil {
 		return err
@@ -139,6 +117,7 @@ func (dev *Device) Close() error {
 	return dev.f.Close()
 }
 
+// WriteEvents writes input events to a virtual keyboard device.
 func (dev *Device) WriteEvents(events []evdev.InputEvent) error {
 	b := make([]byte, evdev.EventSize*len(events))
 	for i, e := range events {

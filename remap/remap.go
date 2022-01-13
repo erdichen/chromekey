@@ -15,6 +15,7 @@ import (
 	"erdi.us/chromekey/uinput"
 )
 
+// State is the data of a key remapper that simulates the FN key that can remap function keys to media keys.
 type State struct {
 	in  *evdev.Device
 	out *uinput.Device
@@ -27,6 +28,7 @@ type State struct {
 	cfg config.RunConfig
 }
 
+// New returns new a key remapper.
 func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
 	ok := false
 
@@ -36,7 +38,7 @@ func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.Run
 		}
 	}()
 
-	if err := waitAllKeyReleased(in); err != nil {
+	if err := waitForAllKeysReleased(in); err != nil {
 		return nil, err
 	}
 
@@ -65,6 +67,7 @@ func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.Run
 	}, nil
 }
 
+// Close closes a remapper and its input and output devices.
 func (s *State) Close() error {
 	if err := s.in.Ungrab(); err != nil {
 		return err
@@ -78,15 +81,18 @@ func (s *State) Close() error {
 	return nil
 }
 
+// Config returns a copy of a remapper's RunConfig.
 func (s *State) Config() config.RunConfig {
 	return s.cfg.Clone()
 }
 
+// SetConfig load a RunConfig into a remapper's internal state.
 func (s *State) SetConfig(cfg config.RunConfig) {
 	s.cfg = cfg.Clone()
 	s.fnEnable = cfg.FnENabled
 }
 
+// Start runs the execution loop that forwards input events from the real keyboard to the virtual keyboard, remapping keys when necessary.
 func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Duration) error {
 	t := time.NewTimer(timeout)
 	if timeout == 0 {
@@ -134,10 +140,12 @@ func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Dur
 
 var verbosity = 0
 
+// SetVerbosity sets logging verbosity.
 func SetVerbosity(v int) {
 	verbosity = v
 }
 
+// genKey returns a sequence of input events that simulates a key press/release.
 func (s *State) genKey(key keycode.Code, value int32) []evdev.InputEvent {
 	return []evdev.InputEvent{
 		{
@@ -202,7 +210,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	var pre, post []evdev.InputEvent
 	for i, ev := range events {
 		if verbosity > 1 {
-			fmt.Printf("%s\n", eventString(&ev))
+			fmt.Printf("%s\n", ev.String())
 		}
 		switch eventcode.EventType(ev.Type) {
 		case eventcode.EV_KEY:
@@ -260,6 +268,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	return events
 }
 
+// startReadEventsLoop loops reading input events and sends them to a channel.
 func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.InputEvent {
 	evC := make(chan []evdev.InputEvent)
 	go func(ctx context.Context) {
@@ -280,7 +289,8 @@ func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.Inp
 	return evC
 }
 
-func waitAllKeyReleased(in *evdev.Device) error {
+// waitForAllKeysReleased before grabbing an input device, otherwise any pressed key will stuck in pressed state.
+func waitForAllKeysReleased(in *evdev.Device) error {
 	bits := make([]byte, (keycode.Code_KEY_CNT+7)/8)
 	for {
 		if err := in.GetKeyStates(bits); err != nil {

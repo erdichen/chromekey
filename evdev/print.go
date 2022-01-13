@@ -1,15 +1,15 @@
-package remap
+package evdev
 
 import (
 	"bytes"
 	"fmt"
 
-	"erdi.us/chromekey/evdev"
 	"erdi.us/chromekey/evdev/eventcode"
 	"erdi.us/chromekey/evdev/keycode"
 )
 
-func eventString(ev *evdev.InputEvent) string {
+// String returns a string representation of InputEvent similar to evtest's output.
+func (ev *InputEvent) String() string {
 	b := &bytes.Buffer{}
 	fmt.Fprintf(b, "Event: time %d.%06d, ", ev.Sec, ev.Usec)
 	if ev.Type == uint16(eventcode.EV_SYN) {

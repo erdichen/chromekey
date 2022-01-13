@@ -73,32 +73,6 @@ func (in *Device) IsKeyboard() bool {
 	return true
 }
 
-func (in *Device) ReadEvents2(ctx context.Context, c chan InputEvent) error {
-	buf := [EventSize * 64]byte{}
-
-	for {
-		n, err := in.f.Read(buf[:])
-		if err != nil {
-			return err
-		}
-
-		b := buf[:n]
-		for len(b) >= EventSize {
-			var ev InputEvent
-			n, err := ev.unmarshal(b[:n])
-			if err != nil {
-				return err
-			}
-			select {
-			case c <- ev:
-			case <-ctx.Done():
-				return nil
-			}
-			b = b[n:]
-		}
-	}
-}
-
 func (in *Device) ReadEvents(ctx context.Context) ([]InputEvent, error) {
 	buf := [EventSize * 64]byte{}
 
@@ -189,24 +163,6 @@ func (in *Device) SetLED(code keycode.LED, on bool) error {
 	}
 	_, err := in.f.Write(ev.Marshal())
 	return err
-}
-
-var (
-	EVIOCGRAB     = ioc.IOW('E', 0x90, 4)
-	EVIOCREVOKE   = ioc.IOW('E', 0x91, 4)
-	EVIOCSCLOCKID = ioc.IOW('E', 0xa0, 4)
-)
-
-func EVIOCGBIT(ev, len uint) uint {
-	return ioc.IOC(ioc.Read, 'E', 0x20+ev, len)
-}
-
-func EVIOCGKEY(len uint) uint {
-	return ioc.IOC(ioc.Read, 'E', 0x18, len)
-}
-
-func EVIOCGLED(len uint) uint {
-	return ioc.IOC(ioc.Read, 'E', 0x19, len)
 }
 
 type InputID struct {

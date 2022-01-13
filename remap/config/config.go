@@ -4,6 +4,7 @@ import (
 	keycode "erdi.us/chromekey/evdev/keycode"
 )
 
+// FromPBKeymap converts a slice of key map entry protos to a Go map.
 func FromPBKeymap(from []*KeymapEntry) map[keycode.Code]keycode.Code {
 	to := make(map[keycode.Code]keycode.Code)
 	for _, v := range from {
@@ -12,6 +13,7 @@ func FromPBKeymap(from []*KeymapEntry) map[keycode.Code]keycode.Code {
 	return to
 }
 
+// ToPBKeymap converts a Go map to a slice of key map entry protos.
 func ToPBKeymap(from map[keycode.Code]keycode.Code) (to []*KeymapEntry) {
 	for k, v := range from {
 		e := &KeymapEntry{
@@ -23,6 +25,8 @@ func ToPBKeymap(from map[keycode.Code]keycode.Code) (to []*KeymapEntry) {
 	return
 }
 
+// RunConfig is the runtime key remap configuration. We do not use the KeymapConfig proto
+// directly because protobuf does not support a map with enum keys.
 type RunConfig struct {
 	FnENabled   bool                          `json:"fn_enabled"`
 	FnKey       keycode.Code                  `json:"fn_key"`
@@ -31,6 +35,7 @@ type RunConfig struct {
 	UseLED      keycode.LED                   `json:"use_led"`
 }
 
+// Clone returns a deep copy of a RunConfig.
 func (cfg RunConfig) Clone() RunConfig {
 	keyMap := make(map[keycode.Code]keycode.Code)
 	for k, v := range cfg.KeyMap {
@@ -46,6 +51,7 @@ func (cfg RunConfig) Clone() RunConfig {
 	return rc
 }
 
+// FromPBConfig creates a RunConfig from a KeymapConfig proto.
 func FromPBConfig(pb *KeymapConfig) RunConfig {
 	rc := RunConfig{
 		FnENabled:   pb.FnEnabled,
@@ -59,6 +65,7 @@ func FromPBConfig(pb *KeymapConfig) RunConfig {
 	return rc
 }
 
+// FromPBConfig creates a KeymapConfig proto from a RunConfig.
 func ToPBConfig(cfg RunConfig) *KeymapConfig {
 	pb := KeymapConfig{
 		FnEnabled:   cfg.FnENabled,
@@ -72,6 +79,7 @@ func ToPBConfig(cfg RunConfig) *KeymapConfig {
 	return &pb
 }
 
+// DefaultRunConfig a default RunConfig with Chromebook media key mappings.
 func DefaultRunConfig() RunConfig {
 	return RunConfig{
 		FnKey:       keycode.Code_KEY_F13,

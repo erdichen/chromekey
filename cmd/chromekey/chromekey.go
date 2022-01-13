@@ -102,6 +102,7 @@ func main() {
 
 	var cfg config.RunConfig
 
+	// Loads configuration from the given file if the flag is valid.
 	if *cfgFile != "" {
 		b, err := ioutil.ReadFile(*cfgFile)
 		if err != nil {
@@ -128,6 +129,7 @@ func main() {
 		cfg.FnKey = fnKey
 	}
 
+	// Dump the configuration and exit. Use this flag to create new default configuration file.
 	if *dumpConfig {
 		pb := config.ToPBConfig(cfg)
 		if _, err := os.Stdout.WriteString((prototext.MarshalOptions{Indent: "  "}).Format(pb)); err != nil {
@@ -136,6 +138,7 @@ func main() {
 		return
 	}
 
+	// Opens an evdev device if the devicePath flag is valid.
 	var in *evdev.Device
 	if *devicePath != "" {
 		d, err := evdev.OpenDevice(*devicePath)
@@ -146,6 +149,7 @@ func main() {
 			in = d
 		}
 	}
+	// If devicePath does not specify a valid device, try to open an input device in the inputDevDir directory.
 	if in == nil {
 		d, err := openInputDevice(*inputDevDir)
 		if err != nil {
@@ -154,17 +158,20 @@ func main() {
 		in = d
 	}
 
+	// Create new remapper instance.
 	s, err := remap.New(ctx, in, *uinputDev, cfg, *grab)
 	if err != nil {
 		log.Fatalf("failed to create key remapper: %v", err)
 	}
 	defer s.Close()
 
+	// Start the remapper event loop.
 	if err := s.Start(ctx, sigC, *timeout); err != nil {
 		log.Fatalf("key remapper stopped: %v", err)
 	}
 }
 
+// openInputDevice opens event devices in a directory to find the first keyboard device.
 func openInputDevice(devDir string) (*evdev.Device, error) {
 	files, err := ioutil.ReadDir(devDir)
 	if err != nil {
@@ -182,6 +189,9 @@ func openInputDevice(devDir string) (*evdev.Device, error) {
 		}
 		if dev.IsKeyboard() {
 			return dev, nil
+		}
+		if err := dev.Close(); err != nil {
+			log.Errorf("failed to close an evdev device: %v", err)
 		}
 	}
 
