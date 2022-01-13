@@ -20,8 +20,7 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
-const usage = `
-Emulates a FN key to convert functions key to media keys. Choose any valid keycode as the FN key.
+const description = `Emulates a FN key to convert functions key to media keys. Choose any valid keycode as the FN key.
 
   1. Press FN key once to toggle between media key and function key modes.
   2. Press FN+Shift+key to use third level key mapping.
@@ -54,8 +53,8 @@ func checkCmd() bool {
 
 func main() {
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), usage, os.Args[0], os.Args[0])
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n\n", os.Args[0])
+		fmt.Fprintf(flag.CommandLine.Output(), description, os.Args[0], os.Args[0])
 		flag.PrintDefaults()
 		fmt.Fprintf(flag.CommandLine.Output(), "\n")
 	}
