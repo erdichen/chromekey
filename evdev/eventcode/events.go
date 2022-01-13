@@ -57,26 +57,3 @@ const (
 	MSC_MAX       MiscEvent = 0x07
 	MSC_CNT       MiscEvent = (MSC_MAX + 1)
 )
-
-/*
- * LEDs
- */
-
-//go:generate stringer -type=LEDEvent
-type LEDEvent int
-
-const (
-	LED_NUML     LEDEvent = 0x00
-	LED_CAPSL    LEDEvent = 0x01
-	LED_SCROLLL  LEDEvent = 0x02
-	LED_COMPOSE  LEDEvent = 0x03
-	LED_KANA     LEDEvent = 0x04
-	LED_SLEEP    LEDEvent = 0x05
-	LED_SUSPEND  LEDEvent = 0x06
-	LED_MUTE     LEDEvent = 0x07
-	LED_MISC     LEDEvent = 0x08
-	LED_MAIL     LEDEvent = 0x09
-	LED_CHARGING LEDEvent = 0x0a
-	LED_MAX      LEDEvent = 0x0f
-	LED_CNT      LEDEvent = (LED_MAX + 1)
-)

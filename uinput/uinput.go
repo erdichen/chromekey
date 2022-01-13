@@ -3,7 +3,6 @@ package uinput
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
 	"os"
 	"syscall"
 	"unsafe"
@@ -12,6 +11,7 @@ import (
 	"erdi.us/chromekey/evdev/eventcode"
 	"erdi.us/chromekey/evdev/keycode"
 	"erdi.us/chromekey/ioc"
+	"erdi.us/chromekey/log"
 	"golang.org/x/sys/unix"
 )
 
@@ -77,7 +77,7 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 		return nil, err
 	}
 
-	for i := 0; i < int(eventcode.LED_CNT); i++ {
+	for i := 0; i < int(keycode.LED_CNT); i++ {
 		if err := unix.IoctlSetInt(int(f.Fd()), UI_SET_LEDBIT, i); err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 		for j := 0; j < 8; j++ {
 			if (b & (1 << j)) != 0 {
 				k := i*8 + j
-				// log.Printf("Event code %v\n", keycode.Key(k))
+				// log.Infof("event code %v\n", keycode.Code(k))
 				if err := unix.IoctlSetInt(int(f.Fd()), UI_SET_KEYBIT, k); err != nil {
 					return nil, err
 				}
@@ -126,7 +126,8 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 func CreateFromDevice(device string, in *evdev.Device) (*Device, error) {
 	bits, err := in.GetKeyBits()
 	if err != nil {
-		log.Fatal(err)
+		log.Errorf("failed to get key bits from evdev device: %v", err)
+		return nil, err
 	}
 	return CreateDevice(device, bits)
 }

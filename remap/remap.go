@@ -3,13 +3,14 @@ package remap
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
+	"syscall"
 	"time"
 
 	"erdi.us/chromekey/evdev"
 	"erdi.us/chromekey/evdev/eventcode"
 	"erdi.us/chromekey/evdev/keycode"
+	"erdi.us/chromekey/log"
 	"erdi.us/chromekey/remap/config"
 	"erdi.us/chromekey/uinput"
 )
@@ -19,7 +20,6 @@ type State struct {
 	out *uinput.Device
 	evC chan []evdev.InputEvent
 
-	grabbed  bool
 	fnEnable bool
 	lastKey  keycode.Code
 	keys     keycode.KeyBits
@@ -27,13 +27,9 @@ type State struct {
 	cfg config.RunConfig
 }
 
-func New(ctx context.Context, inputDev, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
+func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
 	ok := false
 
-	in, err := evdev.OpenDevice(inputDev)
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer func() {
 		if !ok {
 			in.Close()
@@ -64,7 +60,6 @@ func New(ctx context.Context, inputDev, outputDev string, cfg config.RunConfig, 
 
 	ok = true
 	return &State{in: in, out: out, evC: evC,
-		grabbed:  grab,
 		fnEnable: true,
 		cfg:      cfg,
 	}, nil
@@ -98,19 +93,35 @@ func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Dur
 		t.Stop()
 	}
 
+	// Wait for the system to respond to the new input device.
+	ledTimer := time.NewTimer(2 * time.Second)
+	again := true
+
 	done := false
 	for !done {
 		select {
-		case <-sigC:
-			done = true
+		case sig := <-sigC:
+			switch sig {
+			case syscall.SIGTSTP:
+				fmt.Printf("·Suspend breaks keyboard input. Press Ctrl-C to exit!\n")
+			case syscall.SIGCONT:
+			default:
+				done = true
+			}
 		case <-ctx.Done():
 			done = true
 		case <-t.C:
 			done = true
+		case <-ledTimer.C:
+			s.setFnLED()
+			if again {
+				again = false
+				ledTimer.Reset(250 * time.Millisecond)
+			}
 		case events := <-s.evC:
 			events = s.handleEvents(events)
 			if err := s.out.WriteEvents(events); err != nil {
-				log.Print(err)
+				log.Errorf("failed to write events to uinput device: %v", err)
 				break
 			}
 			if timeout > 0 {
@@ -146,6 +157,47 @@ func (s *State) genKey(key keycode.Code, value int32) []evdev.InputEvent {
 	}
 }
 
+func (s *State) setFnLED() {
+	key := keycode.Code_KEY_RESERVED
+	switch s.cfg.UseLED {
+	case keycode.LED_NUML:
+		key = keycode.Code_KEY_NUMLOCK
+	case keycode.LED_CAPSL:
+		key = keycode.Code_KEY_CAPSLOCK
+	case keycode.LED_SCROLLL:
+		key = keycode.Code_KEY_SCROLLLOCK
+	case keycode.LED_COMPOSE:
+		key = keycode.Code_KEY_COMPOSE
+	default:
+		return
+	}
+
+	leds, err := s.in.GetLED()
+	if err != nil {
+		log.Errorf("failed get evdev device LED status: %v", err)
+		return
+	}
+	if leds[s.cfg.UseLED] == s.fnEnable {
+		return
+	}
+
+	v := 0
+	if s.fnEnable {
+		v = 1
+	}
+
+	events := s.genKey(key, 1)
+	events = append(events, s.genKey(key, 0)...)
+	events = append(events, evdev.InputEvent{
+		Type:  uint16(eventcode.EV_LED),
+		Code:  uint16(keycode.LED_NUML),
+		Value: int32(v),
+	})
+	if err := s.out.WriteEvents(events); err != nil {
+		log.Errorf("failed to write num lock key events: %v", err)
+	}
+}
+
 func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	var pre, post []evdev.InputEvent
 	for i, ev := range events {
@@ -160,17 +212,9 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 				if ev.Value == 0 && s.lastKey == s.cfg.FnKey {
 					s.fnEnable = !s.fnEnable
 					if verbosity > 0 {
-						log.Printf("FN %v", s.fnEnable)
+						log.Infof("FN %v", s.fnEnable)
 					}
-					v := int32(0)
-					if s.fnEnable {
-						v = 1
-					}
-					post = append(post, evdev.InputEvent{
-						Type:  uint16(eventcode.EV_LED),
-						Code:  uint16(eventcode.LED_NUML),
-						Value: v,
-					})
+					s.setFnLED()
 				}
 				events[i].Code = uint16(keycode.Code_KEY_FN)
 			default:
@@ -190,7 +234,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 							}
 							events[i].Code = uint16(key)
 							if verbosity > 0 {
-								log.Printf("Map %v to %v", keycode.Code(ev.Code), key)
+								log.Infof("map %v to %v", keycode.Code(ev.Code), key)
 							}
 						}
 					}
@@ -199,7 +243,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 					if s.fnEnable != fnDown {
 						events[i].Code = uint16(key)
 						if verbosity > 0 {
-							log.Printf("Map %v to %v", keycode.Code(ev.Code), key)
+							log.Infof("map %v to %v", keycode.Code(ev.Code), key)
 						}
 					}
 				}
@@ -222,7 +266,7 @@ func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.Inp
 		for {
 			events, err := in.ReadEvents(ctx)
 			if err != nil {
-				log.Print(err)
+				log.Errorf("failed to read from evdev input: %v", err)
 				break
 			}
 			select {

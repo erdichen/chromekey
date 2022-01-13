@@ -1,6 +1,8 @@
 package config
 
-import keycode "erdi.us/chromekey/evdev/keycode"
+import (
+	keycode "erdi.us/chromekey/evdev/keycode"
+)
 
 func FromPBKeymap(from []*KeymapEntry) map[keycode.Code]keycode.Code {
 	to := make(map[keycode.Code]keycode.Code)
@@ -26,6 +28,7 @@ type RunConfig struct {
 	FnKey       keycode.Code                  `json:"fn_key"`
 	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
 	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
+	UseLED      keycode.LED                   `json:"use_led"`
 }
 
 func (cfg RunConfig) Clone() RunConfig {
@@ -37,21 +40,23 @@ func (cfg RunConfig) Clone() RunConfig {
 	for k, v := range cfg.ShiftKeyMap {
 		shiftKeyMap[k] = v
 	}
-	return RunConfig{
-		FnENabled:   cfg.FnENabled,
-		FnKey:       cfg.FnKey,
-		KeyMap:      keyMap,
-		ShiftKeyMap: shiftKeyMap,
-	}
+	rc := cfg
+	rc.KeyMap = keyMap
+	rc.ShiftKeyMap = shiftKeyMap
+	return rc
 }
 
 func FromPBConfig(pb *KeymapConfig) RunConfig {
-	return RunConfig{
+	rc := RunConfig{
 		FnENabled:   pb.FnEnabled,
 		FnKey:       pb.FnKey,
 		KeyMap:      FromPBKeymap(pb.KeyMap),
 		ShiftKeyMap: FromPBKeymap(pb.ShiftKeyMap),
 	}
+	if pb.UseLed != nil {
+		rc.UseLED = pb.GetUseLed()
+	}
+	return rc
 }
 
 func ToPBConfig(cfg RunConfig) *KeymapConfig {
@@ -60,6 +65,9 @@ func ToPBConfig(cfg RunConfig) *KeymapConfig {
 		FnKey:       cfg.FnKey,
 		KeyMap:      ToPBKeymap(cfg.KeyMap),
 		ShiftKeyMap: ToPBKeymap(cfg.ShiftKeyMap),
+	}
+	if cfg.UseLED <= keycode.LED_MAX {
+		pb.UseLed = &cfg.UseLED
 	}
 	return &pb
 }

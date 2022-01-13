@@ -15,4 +15,5 @@ message KeymapConfig {
     keycode.Code fn_key = 2;
     repeated KeymapEntry key_map = 3;
     repeated KeymapEntry shift_key_map = 4;
+    optional keycode.LED use_led = 5;
 }

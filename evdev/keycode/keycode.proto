@@ -713,3 +713,19 @@ enum Code {
 	KEY_MAX             = 0x2ff;
 	KEY_CNT             = 0x300;
 }
+
+enum LED {
+	NUML     = 0x00;
+	CAPSL    = 0x01;
+	SCROLLL  = 0x02;
+	COMPOSE  = 0x03;
+	KANA     = 0x04;
+	SLEEP    = 0x05;
+	SUSPEND  = 0x06;
+	MUTE     = 0x07;
+	MISC     = 0x08;
+	MAIL     = 0x09;
+	CHARGING = 0x0a;
+	MAX      = 0x0f;
+	CNT      = 0x10;
+}
