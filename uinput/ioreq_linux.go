@@ -1,0 +1,36 @@
+//go:build !cgo
+
+package uinput
+
+import (
+	"unsafe"
+
+	"github.com/erdichen/chromekey/ioc"
+)
+
+const MaxNameSize = 80
+
+const (
+	UINPUT_IOCTL_BASE = 'U'
+)
+
+const ptrSize = uint(unsafe.Sizeof(uintptr(0)))
+
+var (
+	UI_DEV_CREATE  = ioc.IO(UINPUT_IOCTL_BASE, 1)
+	UI_DEV_DESTROY = ioc.IO(UINPUT_IOCTL_BASE, 2)
+
+	UI_DEV_SETUP = ioc.IOW(UINPUT_IOCTL_BASE, 3, 8+80+4)
+
+	UI_SET_EVBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 100, 4)
+	UI_SET_KEYBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 101, 4)
+	UI_SET_RELBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 102, 4)
+	UI_SET_ABSBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 103, 4)
+	UI_SET_MSCBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 104, 4)
+	UI_SET_LEDBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 105, 4)
+	UI_SET_SNDBIT  = ioc.IOW(UINPUT_IOCTL_BASE, 106, 4)
+	UI_SET_FFBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 107, 4)
+	UI_SET_PHYS    = ioc.IOW(UINPUT_IOCTL_BASE, 108, ptrSize)
+	UI_SET_SWBIT   = ioc.IOW(UINPUT_IOCTL_BASE, 109, 4)
+	UI_SET_PROPBIT = ioc.IOW(UINPUT_IOCTL_BASE, 110, 4)
+)
