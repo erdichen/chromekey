@@ -28,6 +28,10 @@ func EVIOCGLED(len uint) uint {
 	return ioc.IOC(ioc.Read, 'E', 0x19, len)
 }
 
+func EVIOCGNAME(len uint) uint {
+	return ioc.IOC(ioc.Read, 'E', 0x06, len)
+}
+
 const EventSize = int(unsafe.Sizeof(*(*InputEvent)(nil)))
 
 func (ev *InputEvent) Marshal() []byte {

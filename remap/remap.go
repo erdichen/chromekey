@@ -149,7 +149,7 @@ func SetVerbosity(v int) {
 }
 
 // genKey returns a sequence of input events that simulates a key press/release.
-func (s *State) genKey(key keycode.Code, value int32) []evdev.InputEvent {
+func GenKey(key keycode.Code, value int32) []evdev.InputEvent {
 	return []evdev.InputEvent{
 		{
 			Type:  uint16(eventcode.EV_MSC),
@@ -198,8 +198,8 @@ func (s *State) setFnLED() {
 		v = 1
 	}
 
-	events := s.genKey(key, 1)
-	events = append(events, s.genKey(key, 0)...)
+	events := GenKey(key, 1)
+	events = append(events, GenKey(key, 0)...)
 	events = append(events, evdev.InputEvent{
 		Type:  uint16(eventcode.EV_LED),
 		Code:  uint16(keycode.LED_NUML),
@@ -240,12 +240,12 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 						if fnDown {
 							// Clear the shift keys to simulate the mapped key with the shift keys released.
 							if s.keys.Get(keycode.Code_KEY_LEFTSHIFT) {
-								pre = append(pre, s.genKey(keycode.Code_KEY_LEFTSHIFT, 0)...)
-								post = append(post, s.genKey(keycode.Code_KEY_LEFTSHIFT, 1)...)
+								pre = append(pre, GenKey(keycode.Code_KEY_LEFTSHIFT, 0)...)
+								post = append(post, GenKey(keycode.Code_KEY_LEFTSHIFT, 1)...)
 							}
 							if s.keys.Get(keycode.Code_KEY_RIGHTSHIFT) {
-								pre = append(pre, s.genKey(keycode.Code_KEY_RIGHTSHIFT, 0)...)
-								post = append(post, s.genKey(keycode.Code_KEY_RIGHTSHIFT, 1)...)
+								pre = append(pre, GenKey(keycode.Code_KEY_RIGHTSHIFT, 0)...)
+								post = append(post, GenKey(keycode.Code_KEY_RIGHTSHIFT, 1)...)
 							}
 							events[i].Code = uint16(key)
 							if verbosity > 0 {

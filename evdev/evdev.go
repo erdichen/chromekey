@@ -92,6 +92,22 @@ func (in *Device) GetKeyStates(bits []byte) error {
 	return nil
 }
 
+func (in *Device) GetName() (string, error) {
+	var buf [256]byte
+	err := ioc.Ioctl(int(in.f.Fd()), EVIOCGNAME(uint(len(buf))), uintptr(unsafe.Pointer(&buf[0])))
+	if err != nil {
+		return "", err
+	}
+	sz := 0
+	for i, v := range buf {
+		if v == 0 {
+			sz = i
+			break
+		}
+	}
+	return string(buf[:sz]), nil
+}
+
 func (in *Device) Grab() error {
 	if in.grabbed {
 		return nil

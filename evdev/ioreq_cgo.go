@@ -16,6 +16,10 @@ unsigned int _EVIOCGKEY(unsigned int len) {
 unsigned int _EVIOCGLED(unsigned int len) {
 	return EVIOCGLED(len);
 }
+
+unsigned int _EVIOCGNAME(unsigned int len) {
+	return EVIOCGNAME(len);
+}
 */
 import "C"
 
@@ -40,6 +44,10 @@ func EVIOCGKEY(len uint) uint {
 
 func EVIOCGLED(len uint) uint {
 	return uint(C._EVIOCGLED(C.uint(len)))
+}
+
+func EVIOCGNAME(len uint) uint {
+	return uint(C._EVIOCGNAME(C.uint(len)))
 }
 
 func structSizeMismatch()
