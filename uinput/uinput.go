@@ -1,3 +1,4 @@
+// Package uinput implements a subset of the uinput API to support sending remapped keys.
 package uinput
 
 import (
@@ -119,7 +120,7 @@ func (dev *Device) Close() error {
 func (dev *Device) WriteEvents(events []evdev.InputEvent) error {
 	b := make([]byte, evdev.EventSize*len(events))
 	for i, e := range events {
-		copy(b[i*evdev.EventSize:], e.ToBytes())
+		copy(b[i*evdev.EventSize:], e.Marshal())
 	}
 	_, err := dev.f.Write(b)
 	return err

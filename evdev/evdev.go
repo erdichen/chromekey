@@ -2,8 +2,6 @@ package evdev
 
 import (
 	"context"
-	"encoding/binary"
-	"errors"
 	"os"
 	"unsafe"
 
@@ -12,6 +10,8 @@ import (
 	"erdi.us/chromekey/ioc"
 	"golang.org/x/sys/unix"
 )
+
+const PtrSize = uint(unsafe.Sizeof(uintptr(0)))
 
 type InputEvent struct {
 	Sec  uint
@@ -22,32 +22,8 @@ type InputEvent struct {
 	Value int32
 }
 
-const EventSize = int(unsafe.Sizeof(*(*InputEvent)(unsafe.Pointer(uintptr(0)))))
-
 func (ev *InputEvent) ToBytes() []byte {
 	return (*(*[EventSize]byte)(unsafe.Pointer(ev)))[:]
-}
-
-// func (ev *InputEvent) Marshal() []byte {
-// 	b := [EventSize]byte{}
-// 	binary.LittleEndian.PutUint64(b[:], uint64(ev.Sec))
-// 	binary.LittleEndian.PutUint64(b[8:], uint64(ev.Usec))
-// 	binary.LittleEndian.PutUint16(b[16:], ev.Type)
-// 	binary.LittleEndian.PutUint16(b[18:], ev.Code)
-// 	binary.LittleEndian.PutUint32(b[20:], uint32(ev.Value))
-// 	return b[:]
-// }
-
-func (ev *InputEvent) unmarshal(b []byte) (int, error) {
-	if len(b) < EventSize {
-		return 0, errors.New("not enough data")
-	}
-	ev.Sec = uint(binary.LittleEndian.Uint64(b))
-	ev.Usec = uint(binary.LittleEndian.Uint64(b[8:]))
-	ev.Type = uint16(binary.LittleEndian.Uint16(b[16:]))
-	ev.Code = uint16(binary.LittleEndian.Uint16(b[18:]))
-	ev.Value = int32(binary.LittleEndian.Uint32(b[20:]))
-	return EventSize, nil
 }
 
 type Device struct {

@@ -36,7 +36,7 @@ var (
 func structSizeMismatch()
 
 func init() {
-	const sz = int(unsafe.Sizeof(*(*Setup)(unsafe.Pointer(uintptr(0)))))
+	const sz = int(unsafe.Sizeof(*(*Setup)(nil)))
 	if sz != (8 + MaxNameSize + 4) {
 		structSizeMismatch()
 	}

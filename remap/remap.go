@@ -38,6 +38,7 @@ func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.Run
 		}
 	}()
 
+	// Grabbing an input device will cause any pressed key to stuck in the pressed state.
 	if err := waitForAllKeysReleased(in); err != nil {
 		return nil, err
 	}
@@ -48,6 +49,7 @@ func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.Run
 		}
 	}
 
+	// Create an virtual device that replicates the capabilities and keys of the give input device.
 	out, err := uinput.CreateFromDevice(outputDev, in)
 	if err != nil {
 		return nil, err
@@ -121,6 +123,7 @@ func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Dur
 		case <-ledTimer.C:
 			s.setFnLED()
 			if again {
+				// Set twice in case the desktop envinrment's state is out of sync with the hardware.
 				again = false
 				ledTimer.Reset(250 * time.Millisecond)
 			}
@@ -165,6 +168,7 @@ func (s *State) genKey(key keycode.Code, value int32) []evdev.InputEvent {
 	}
 }
 
+// setFnLED uses one the keyboard's LEDs to indicate FN key lock.
 func (s *State) setFnLED() {
 	key := keycode.Code_KEY_RESERVED
 	switch s.cfg.UseLED {
@@ -206,6 +210,7 @@ func (s *State) setFnLED() {
 	}
 }
 
+// handleEvents converts key events to mapped key events if it matches the mapping rules.
 func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	var pre, post []evdev.InputEvent
 	for i, ev := range events {
@@ -217,6 +222,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 			s.keys.Set(keycode.Code(ev.Code), ev.Value != 0)
 			switch keycode.Code(ev.Code) {
 			case s.cfg.FnKey:
+				// Toogle FN key lock state only if it is pressed by itself. For a FN+key combo, lastKey is not the FN key.
 				if ev.Value == 0 && s.lastKey == s.cfg.FnKey {
 					s.fnEnable = !s.fnEnable
 					if verbosity > 0 {
@@ -228,6 +234,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 			default:
 				isShiftDown := s.keys.Get(keycode.Code_KEY_LEFTSHIFT) || s.keys.Get(keycode.Code_KEY_RIGHTSHIFT)
 				if isShiftDown {
+					// Handle FN+Shift+ key map.
 					if key, ok := s.cfg.ShiftKeyMap[keycode.Code(ev.Code)]; ok {
 						fnDown := s.keys.Get(s.cfg.FnKey)
 						if fnDown {
@@ -247,6 +254,7 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 						}
 					}
 				} else if key, ok := s.cfg.KeyMap[keycode.Code(ev.Code)]; ok {
+					// Handle FN+ key map.
 					fnDown := s.keys.Get(s.cfg.FnKey)
 					if s.fnEnable != fnDown {
 						events[i].Code = uint16(key)
@@ -289,7 +297,7 @@ func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.Inp
 	return evC
 }
 
-// waitForAllKeysReleased before grabbing an input device, otherwise any pressed key will stuck in pressed state.
+// waitForAllKeysReleased returns after all pressed keys have been released.
 func waitForAllKeysReleased(in *evdev.Device) error {
 	bits := make([]byte, (keycode.Code_KEY_CNT+7)/8)
 	for {

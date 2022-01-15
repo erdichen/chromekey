@@ -51,6 +51,24 @@ func checkCmd() bool {
 	return true
 }
 
+var amd64 = []int8{'x', '8', '6', '_', '6', '4'}
+
+func isAMD64() bool {
+	utsname := syscall.Utsname{}
+	if err := syscall.Uname(&utsname); err != nil {
+		return evdev.PtrSize == 8
+	}
+	m := utsname.Machine
+	for i, v := range amd64 {
+		if m[i] != v {
+			return false
+		}
+	}
+	return true
+}
+
+var verbosity = flag.Int("v", 0, "Verbose logging level")
+
 func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n\n", os.Args[0])
@@ -62,7 +80,6 @@ func main() {
 	inputDevDir := flag.String("evdev_dir", "/dev/input", "Keyboard input device directory")
 	uinputDev := flag.String("uinput", "/dev/uinput", "User input event injection device")
 	timeout := flag.Duration("timeout", 0, "Exit after seconds since last event (0=disable)")
-	verbosity := flag.Int("v", 0, "Verbose logging level")
 	grab := flag.Bool("grab", true, "Grab evdev input device")
 	cfgFile := flag.String("config_file", "", "Configuration file")
 	dumpConfig := flag.Bool("dump_config", false, "Dump configuration file")
@@ -86,6 +103,10 @@ func main() {
 		return nil
 	})
 	flag.Parse()
+
+	if isAMD64() && evdev.PtrSize != 8 {
+		log.Fatalf("Do not run 32 bit binary on a 64 bit system!")
+	}
 
 	remap.SetVerbosity(*verbosity)
 
@@ -181,13 +202,20 @@ func openInputDevice(devDir string) (*evdev.Device, error) {
 		if !strings.HasPrefix(v.Name(), "event") {
 			continue
 		}
-		dev, e := evdev.OpenDevice(filepath.Join(devDir, v.Name()))
+		file := filepath.Join(devDir, v.Name())
+		dev, e := evdev.OpenDevice(file)
 		if e != nil {
 			err = e
 			continue
 		}
 		if dev.IsKeyboard() {
+			if *verbosity > 1 {
+				log.Infof("Opened keyboard input device: %v,", file)
+			}
 			return dev, nil
+		}
+		if *verbosity > 1 {
+			log.Infof("Skipped non-keyboard input device: %v,", file)
 		}
 		if err := dev.Close(); err != nil {
 			log.Errorf("failed to close an evdev device: %v", err)

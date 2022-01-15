@@ -19,6 +19,11 @@ unsigned int _EVIOCGLED(unsigned int len) {
 */
 import "C"
 
+import (
+	"errors"
+	"unsafe"
+)
+
 var (
 	EVIOCGRAB     = C.EVIOCGRAB
 	EVIOCREVOKE   = C.EVIOCREVOKE
@@ -39,8 +44,34 @@ func EVIOCGLED(len uint) uint {
 
 func structSizeMismatch()
 
+const EventSize = int(unsafe.Sizeof(*(*C.struct_input_event)(nil)))
+const goEventSize = int(unsafe.Sizeof(*(*InputEvent)(nil)))
+
 func init() {
-	if EventSize != 24 {
+	if goEventSize != EventSize {
 		structSizeMismatch()
 	}
+}
+
+func (ev *InputEvent) Marshal() []byte {
+	cev := C.struct_input_event{
+		time:  C.struct_timeval{tv_sec: C.long(ev.Sec), tv_usec: C.long(ev.Usec)},
+		_type: C.ushort(ev.Type),
+		code:  C.ushort(ev.Code),
+		value: C.int(ev.Value),
+	}
+	return (*(*[EventSize]byte)(unsafe.Pointer(&cev)))[:]
+}
+
+func (ev *InputEvent) unmarshal(b []byte) (int, error) {
+	if len(b) < EventSize {
+		return 0, errors.New("not enough data")
+	}
+	p := (*C.struct_input_event)(unsafe.Pointer(&b[0]))
+	ev.Sec = uint(p.time.tv_sec)
+	ev.Usec = uint(p.time.tv_usec)
+	ev.Type = uint16(p._type)
+	ev.Code = uint16(p.code)
+	ev.Value = int32(p.value)
+	return EventSize, nil
 }
