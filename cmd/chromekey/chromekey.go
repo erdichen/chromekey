@@ -51,22 +51,6 @@ func checkCmd() bool {
 	return true
 }
 
-var amd64 = []int8{'x', '8', '6', '_', '6', '4'}
-
-func isAMD64() bool {
-	utsname := syscall.Utsname{}
-	if err := syscall.Uname(&utsname); err != nil {
-		return evdev.PtrSize == 8
-	}
-	m := utsname.Machine
-	for i, v := range amd64 {
-		if m[i] != v {
-			return false
-		}
-	}
-	return true
-}
-
 var verbosity = flag.Int("v", 0, "Verbose logging level")
 
 func main() {
@@ -103,10 +87,6 @@ func main() {
 		return nil
 	})
 	flag.Parse()
-
-	if isAMD64() && evdev.PtrSize != 8 {
-		log.Fatalf("Do not run 32 bit binary on a 64 bit system!")
-	}
 
 	remap.SetVerbosity(*verbosity)
 
