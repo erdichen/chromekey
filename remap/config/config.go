@@ -1,6 +1,8 @@
 package config
 
 import (
+	"sort"
+
 	keycode "github.com/erdichen/chromekey/evdev/keycode"
 )
 
@@ -22,13 +24,14 @@ func ToPBKeymap(from map[keycode.Code]keycode.Code) (to []*KeymapEntry) {
 		}
 		to = append(to, e)
 	}
+	sort.SliceStable(to, func(i, j int) bool { return to[i].To < to[j].To })
 	return
 }
 
 // RunConfig is the runtime key remap configuration. We do not use the KeymapConfig proto
 // directly because protobuf does not support a map with enum keys.
 type RunConfig struct {
-	FnENabled   bool                          `json:"fn_enabled"`
+	FnEnabled   bool                          `json:"fn_enabled"`
 	FnKey       keycode.Code                  `json:"fn_key"`
 	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
 	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
@@ -54,7 +57,7 @@ func (cfg RunConfig) Clone() RunConfig {
 // FromPBConfig creates a RunConfig from a KeymapConfig proto.
 func FromPBConfig(pb *KeymapConfig) RunConfig {
 	rc := RunConfig{
-		FnENabled:   pb.FnEnabled,
+		FnEnabled:   pb.FnEnabled,
 		FnKey:       pb.FnKey,
 		KeyMap:      FromPBKeymap(pb.KeyMap),
 		ShiftKeyMap: FromPBKeymap(pb.ShiftKeyMap),
@@ -68,7 +71,7 @@ func FromPBConfig(pb *KeymapConfig) RunConfig {
 // FromPBConfig creates a KeymapConfig proto from a RunConfig.
 func ToPBConfig(cfg RunConfig) *KeymapConfig {
 	pb := KeymapConfig{
-		FnEnabled:   cfg.FnENabled,
+		FnEnabled:   cfg.FnEnabled,
 		FnKey:       cfg.FnKey,
 		KeyMap:      ToPBKeymap(cfg.KeyMap),
 		ShiftKeyMap: ToPBKeymap(cfg.ShiftKeyMap),

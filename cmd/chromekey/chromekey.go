@@ -121,7 +121,7 @@ func main() {
 			log.Fatalf("failed to marshal configuration proto: %v", err)
 		}
 		cfg = config.RunConfig{
-			FnENabled:   pb.FnEnabled,
+			FnEnabled:   pb.FnEnabled,
 			FnKey:       keycode.Code(pb.FnKey),
 			KeyMap:      config.FromPBKeymap(pb.KeyMap),
 			ShiftKeyMap: config.FromPBKeymap(pb.ShiftKeyMap),
@@ -130,6 +130,7 @@ func main() {
 		cfg = config.DefaultRunConfig()
 	}
 
+	log.Infof("ENABLED %v", cfg.FnEnabled)
 	cfg.UseLED = useLED
 
 	if fnKey != keycode.Code_KEY_RESERVED {

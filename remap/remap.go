@@ -62,7 +62,7 @@ func New(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device, outputDev st
 	}()
 
 	ok = true
-	return &State{in: in, out: out, fnEnable: true, cfg: cfg}, nil
+	return &State{in: in, out: out, fnEnable: cfg.FnEnabled, cfg: cfg}, nil
 }
 
 // Close closes a remapper and its input and output devices.
@@ -87,7 +87,7 @@ func (s *State) Config() config.RunConfig {
 // SetConfig load a RunConfig into a remapper's internal state.
 func (s *State) SetConfig(cfg config.RunConfig) {
 	s.cfg = cfg.Clone()
-	s.fnEnable = cfg.FnENabled
+	s.fnEnable = cfg.FnEnabled
 }
 
 // Start runs the execution loop that forwards input events from the real keyboard to the virtual keyboard, remapping keys when necessary.

@@ -46,16 +46,22 @@ CGO_ENABLED=0 go build github.com/erdichen/chromekey/cmd/chromekey
 
 First pick a key as the `FN` key. I don't use the `Lock` key (at the upper left corner) on my Chromebook, so I turned it into the `FN` key.
 
+### Create a default configuration file with the `--dump_config` flag.
+
+```
+./chromekey --dump_config > chromekey.config
+```
+
 ### FN key configuration snippet
 
 ```
 fn_key:  KEY_F13
 ```
 
-### Create a default configuration file with the `--dump_config` flag.
+### Set FN lock state on start up
 
 ```
-./chromekey --dump_config > chromekey.config
+fn_enabled: true
 ```
 
 ### Use the `--show_key` flag to find key names
@@ -96,6 +102,12 @@ NOTE: Don't use this option if you have an external USB keyboard with a numpad.
 ExecStart=/usr/local/bin/chromekey --use_led=NUML
 ```
 
+Or add this flag to your configuration file:
+
+```
+use_led: NUML
+```
+
 ### Add a udev rule to trigger the systemd service
 
 ```
@@ -107,3 +119,4 @@ EOF
 ### Nice Addition
 
 Install a [Lock Keys](https://extensions.gnome.org/extension/36/lock-keys/) Gnome Shell extension to show LED status on screen.
+
