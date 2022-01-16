@@ -56,6 +56,12 @@ First pick a key as the `FN` key. I don't use the `Lock` key (at the upper left 
 ./chromekey --dump_config > chromekey.config
 ```
 
+### Use the `--show_key` flag to find key names
+
+```
+./chromekey --show_key
+```
+
 ### FN key configuration snippet
 
 ```
@@ -68,10 +74,34 @@ fn_key:  KEY_F13
 fn_enabled: true
 ```
 
-### Use the `--show_key` flag to find key names
+### Map third-level keys for keyboard backlight
+
+Use `FN+shift+F6/F7` for keyboard backlight adjustment:
 
 ```
-./chromekey --show_key
+shift_key_map:  {
+  from:  KEY_F6
+  to:  KEY_KBDILLUMDOWN
+}
+shift_key_map:  {
+  from:  KEY_BRIGHTNESSDOWN
+  to:  KEY_KBDILLUMDOWN
+}
+shift_key_map:  {
+  from:  KEY_F7
+  to:  KEY_KBDILLUMUP
+}
+```
+
+### Add additional key map that uses FN key as a modifier
+
+For example, press FN+backspace to send the DELETE key:
+
+```
+mod_key_map:  {
+  from:  KEY_BACKSPACE
+  to:  KEY_DELETE
+}
 ```
 
 ## Installation
@@ -110,17 +140,6 @@ Or add this flag to your configuration file:
 
 ```
 use_led: NUML
-```
-
-### Add additional key map that uses FN key as a modifier
-
-For example, press FN+backspace to send the DELETE key:
-
-```
-mod_key_map:  {
-  from:  KEY_BACKSPACE
-  to:  KEY_DELETE
-}
 ```
 
 ### Add a udev rule to trigger the systemd service

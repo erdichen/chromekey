@@ -24,7 +24,7 @@ func ToPBKeymap(from map[keycode.Code]keycode.Code) (to []*KeymapEntry) {
 		}
 		to = append(to, e)
 	}
-	sort.SliceStable(to, func(i, j int) bool { return to[i].To < to[j].To })
+	sort.SliceStable(to, func(i, j int) bool { return to[i].From < to[j].From })
 	return
 }
 
