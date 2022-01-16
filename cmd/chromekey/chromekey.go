@@ -130,8 +130,9 @@ func main() {
 		cfg = config.DefaultRunConfig()
 	}
 
-	log.Infof("ENABLED %v", cfg.FnEnabled)
-	cfg.UseLED = useLED
+	if useLED != keycode.LED_CNT {
+		cfg.UseLED = useLED
+	}
 
 	if fnKey != keycode.Code_KEY_RESERVED {
 		// Overrides FN key in config from flag value.
