@@ -120,12 +120,7 @@ func main() {
 		if err := prototext.Unmarshal(b, &pb); err != nil {
 			log.Fatalf("failed to marshal configuration proto: %v", err)
 		}
-		cfg = config.RunConfig{
-			FnEnabled:   pb.FnEnabled,
-			FnKey:       keycode.Code(pb.FnKey),
-			KeyMap:      config.FromPBKeymap(pb.KeyMap),
-			ShiftKeyMap: config.FromPBKeymap(pb.ShiftKeyMap),
-		}
+		cfg = config.FromPBConfig(&pb)
 	} else if *useDefault {
 		cfg = config.DefaultRunConfig()
 	}

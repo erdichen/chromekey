@@ -13,7 +13,9 @@ message KeymapEntry {
 message KeymapConfig {
     bool fn_enabled = 1;
     keycode.Code fn_key = 2;
-    repeated KeymapEntry key_map = 3;
-    repeated KeymapEntry shift_key_map = 4;
-    optional keycode.LED use_led = 5;
+    optional keycode.LED use_led = 3;
+    // Reserved tags here for future non-repeating fields.
+    repeated KeymapEntry key_map = 10;		    // FN locked
+    repeated KeymapEntry mod_key_map = 11;	    // FN+key
+    repeated KeymapEntry shift_key_map = 12;	// FN+shift+key
 }

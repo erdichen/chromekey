@@ -222,8 +222,11 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 			s.keys.Set(keycode.Code(ev.Code), ev.Value != 0)
 			switch keycode.Code(ev.Code) {
 			case s.cfg.FnKey:
-				// Toogle FN key lock state only if it is pressed by itself. For a FN+key combo, lastKey is not the FN key.
-				if ev.Value == 0 && s.lastKey == s.cfg.FnKey {
+				// Toogle FN key lock state only if it is pressed by itself.
+				// Ignore these two cases:
+				//   1. FN is last key released, but another key was released while FN is down.
+				//   2. FN released with at least 1 key still down.
+				if ev.Value == 0 && s.lastKey == s.cfg.FnKey && s.keys.IsZero() {
 					s.fnEnable = !s.fnEnable
 					if verbosity > 0 {
 						log.Infof("FN %v", s.fnEnable)
@@ -249,17 +252,27 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 							}
 							events[i].Code = uint16(key)
 							if verbosity > 0 {
-								log.Infof("map %v to %v", keycode.Code(ev.Code), key)
+								log.Infof("shift map %v to %v", keycode.Code(ev.Code), key)
 							}
 						}
 					}
-				} else if key, ok := s.cfg.KeyMap[keycode.Code(ev.Code)]; ok {
-					// Handle FN+ key map.
-					fnDown := s.keys.Get(s.cfg.FnKey)
-					if s.fnEnable != fnDown {
+				} else if s.keys.Get(s.cfg.FnKey) {
+					if key, ok := s.cfg.ModKeyMap[keycode.Code(ev.Code)]; ok {
 						events[i].Code = uint16(key)
 						if verbosity > 0 {
-							log.Infof("map %v to %v", keycode.Code(ev.Code), key)
+							log.Infof("mod map %v to %v", keycode.Code(ev.Code), key)
+						}
+					} else if key, ok := s.cfg.KeyMap[keycode.Code(ev.Code)]; ok && !s.fnEnable {
+						events[i].Code = uint16(key)
+						if verbosity > 0 {
+							log.Infof("fn mod map %v to %v", keycode.Code(ev.Code), key)
+						}
+					}
+				} else if key, ok := s.cfg.KeyMap[keycode.Code(ev.Code)]; ok {
+					if s.fnEnable {
+						events[i].Code = uint16(key)
+						if verbosity > 0 {
+							log.Infof("fn map %v to %v", keycode.Code(ev.Code), key)
 						}
 					}
 				}

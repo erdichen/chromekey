@@ -34,6 +34,7 @@ type RunConfig struct {
 	FnEnabled   bool                          `json:"fn_enabled"`
 	FnKey       keycode.Code                  `json:"fn_key"`
 	KeyMap      map[keycode.Code]keycode.Code `json:"key_map"`
+	ModKeyMap   map[keycode.Code]keycode.Code `json:"mod_key_map"`
 	ShiftKeyMap map[keycode.Code]keycode.Code `json:"shift_key_map"`
 	UseLED      keycode.LED                   `json:"use_led"`
 }
@@ -48,9 +49,14 @@ func (cfg RunConfig) Clone() RunConfig {
 	for k, v := range cfg.ShiftKeyMap {
 		shiftKeyMap[k] = v
 	}
+	modKeyMap := make(map[keycode.Code]keycode.Code)
+	for k, v := range cfg.ShiftKeyMap {
+		modKeyMap[k] = v
+	}
 	rc := cfg
 	rc.KeyMap = keyMap
 	rc.ShiftKeyMap = shiftKeyMap
+	rc.ModKeyMap = modKeyMap
 	return rc
 }
 
@@ -60,6 +66,7 @@ func FromPBConfig(pb *KeymapConfig) RunConfig {
 		FnEnabled:   pb.FnEnabled,
 		FnKey:       pb.FnKey,
 		KeyMap:      FromPBKeymap(pb.KeyMap),
+		ModKeyMap:   FromPBKeymap(pb.ModKeyMap),
 		ShiftKeyMap: FromPBKeymap(pb.ShiftKeyMap),
 	}
 	if pb.UseLed != nil {
@@ -74,6 +81,7 @@ func ToPBConfig(cfg RunConfig) *KeymapConfig {
 		FnEnabled:   cfg.FnEnabled,
 		FnKey:       cfg.FnKey,
 		KeyMap:      ToPBKeymap(cfg.KeyMap),
+		ModKeyMap:   ToPBKeymap(cfg.ModKeyMap),
 		ShiftKeyMap: ToPBKeymap(cfg.ShiftKeyMap),
 	}
 	if cfg.UseLED <= keycode.LED_MAX {
@@ -87,6 +95,7 @@ func DefaultRunConfig() RunConfig {
 	return RunConfig{
 		FnKey:       keycode.Code_KEY_F13,
 		KeyMap:      defaultFnKeyMap(),
+		ModKeyMap:   map[keycode.Code]keycode.Code{},
 		ShiftKeyMap: defaultShiftKeyMap(),
 	}
 }
