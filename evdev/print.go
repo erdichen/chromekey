@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"erdi.us/chromekey/evdev/eventcode"
-	"erdi.us/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/evdev/eventcode"
+	"github.com/erdichen/chromekey/evdev/keycode"
 )
 
 // String returns a string representation of InputEvent similar to evtest's output.

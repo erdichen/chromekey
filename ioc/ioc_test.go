@@ -6,7 +6,7 @@ import (
 	"testing"
 	"unsafe"
 
-	"erdi.us/chromekey/ioc/testdefs"
+	"github.com/erdichen/chromekey/ioc/testdefs"
 )
 
 const ptrSize = uint(unsafe.Sizeof(uintptr(0)))

@@ -1,6 +1,6 @@
 package config
 
-import "erdi.us/chromekey/evdev/keycode"
+import "github.com/erdichen/chromekey/evdev/keycode"
 
 func defaultFnKeyMap() map[keycode.Code]keycode.Code {
 	return map[keycode.Code]keycode.Code{

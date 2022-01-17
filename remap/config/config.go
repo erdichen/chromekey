@@ -1,7 +1,7 @@
 package config
 
 import (
-	keycode "erdi.us/chromekey/evdev/keycode"
+	keycode "github.com/erdichen/chromekey/evdev/keycode"
 )
 
 // FromPBKeymap converts a slice of key map entry protos to a Go map.

@@ -38,6 +38,7 @@ func structSizeMismatch()
 func init() {
 	const sz = int(unsafe.Sizeof(*(*Setup)(nil)))
 	if sz != (8 + MaxNameSize + 4) {
+		// Compile time check. When the if statement is true, the compile looks this function which is undefined.
 		structSizeMismatch()
 	}
 }

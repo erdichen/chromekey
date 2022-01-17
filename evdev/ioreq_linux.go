@@ -7,7 +7,7 @@ import (
 	"errors"
 	"unsafe"
 
-	"erdi.us/chromekey/ioc"
+	"github.com/erdichen/chromekey/ioc"
 )
 
 var (

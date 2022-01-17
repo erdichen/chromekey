@@ -7,7 +7,7 @@
 package config
 
 import (
-	keycode "erdi.us/chromekey/evdev/keycode"
+	keycode "github.com/erdichen/chromekey/evdev/keycode"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"

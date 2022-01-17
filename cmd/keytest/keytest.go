@@ -1,3 +1,4 @@
+// Binary keytest sends all keycodes to the virtual uinput device and reads them from the corresponding virtual evdev device for comparison.
 package main
 
 import (
@@ -8,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"erdi.us/chromekey/evdev"
-	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/log"
-	"erdi.us/chromekey/remap"
-	"erdi.us/chromekey/uinput"
+	"github.com/erdichen/chromekey/evdev"
+	"github.com/erdichen/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/log"
+	"github.com/erdichen/chromekey/remap"
+	"github.com/erdichen/chromekey/uinput"
 )
 
 func main() {
@@ -91,10 +92,12 @@ func main() {
 	}
 }
 
+// cmpEvent compares two InputEvents for equality while ignoring the event time.
 func cmpEvent(a, b evdev.InputEvent) bool {
 	return a.Type == b.Type && a.Code == b.Code && a.Value == b.Value
 }
 
+// openInputDevice returns the virtual input device for testing.
 func openInputDevice(devDir string) (*evdev.Device, error) {
 	files, err := ioutil.ReadDir(devDir)
 	if err != nil {

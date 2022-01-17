@@ -5,7 +5,7 @@ package uinput
 import (
 	"unsafe"
 
-	"erdi.us/chromekey/ioc"
+	"github.com/erdichen/chromekey/ioc"
 )
 
 const MaxNameSize = 80

@@ -1,3 +1,4 @@
+// Binary remaps function keys to Chromebook media keys on Linux.
 package main
 
 import (
@@ -10,13 +11,14 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 
-	"erdi.us/chromekey/evdev"
-	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/log"
-	"erdi.us/chromekey/remap"
-	"erdi.us/chromekey/remap/config"
+	"github.com/erdichen/chromekey/evdev"
+	"github.com/erdichen/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/log"
+	"github.com/erdichen/chromekey/remap"
+	"github.com/erdichen/chromekey/remap/config"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
@@ -68,6 +70,7 @@ func main() {
 	cfgFile := flag.String("config_file", "", "Configuration file")
 	dumpConfig := flag.Bool("dump_config", false, "Dump configuration file")
 	useDefault := flag.Bool("use_default", true, "Use default configuration if config_file is not set")
+	showKey := flag.Bool("show_key", false, "Show keycodes only and don't remap or forward the keys")
 	fnKey := keycode.Code_KEY_RESERVED
 	flag.Func("fnkey", "Keycode of the FN key (default KEY_FN13)", func(value string) error {
 		key, ok := keycode.Code_value[value]
@@ -88,11 +91,16 @@ func main() {
 	})
 	flag.Parse()
 
-	remap.SetVerbosity(*verbosity)
-
 	if checkCmd() {
 		return
 	}
+
+	if *showKey {
+		*verbosity += 3
+		*grab = false
+	}
+
+	remap.SetVerbosity(*verbosity)
 
 	sigC := make(chan os.Signal, 10)
 	signal.Notify(sigC, os.Interrupt, syscall.SIGTERM, syscall.SIGTSTP, syscall.SIGCONT)
@@ -158,16 +166,55 @@ func main() {
 		in = d
 	}
 
+	var wg sync.WaitGroup
+	defer func() {
+		cancel()
+		wg.Wait()
+	}()
+
+	if *showKey {
+		readAndPrintKeys(ctx, &wg, in, sigC)
+		return
+	}
+
 	// Create new remapper instance.
-	s, err := remap.New(ctx, in, *uinputDev, cfg, *grab)
+	s, err := remap.New(ctx, &wg, in, *uinputDev, cfg, *grab)
 	if err != nil {
 		log.Fatalf("failed to create key remapper: %v", err)
 	}
 	defer s.Close()
 
+	evC := remap.StartReadEventsLoop(ctx, &wg, in)
+
 	// Start the remapper event loop.
-	if err := s.Start(ctx, sigC, *timeout); err != nil {
+	if err := s.Start(ctx, sigC, evC, *timeout); err != nil {
 		log.Fatalf("key remapper stopped: %v", err)
+	}
+}
+
+// readAndPrintKeys prints keycodes to help with writing the configuration file.
+func readAndPrintKeys(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device, sigC chan os.Signal) {
+	defer in.Close()
+	evC := remap.StartReadEventsLoop(ctx, wg, in)
+	done := false
+	for !done {
+		select {
+		case sig := <-sigC:
+			switch sig {
+			case syscall.SIGTSTP:
+				fmt.Printf("·Suspend breaks keyboard input. Press Ctrl-C to exit!\n")
+			default:
+				done = true
+			}
+		case events, ok := <-evC:
+			if !ok {
+				done = true
+				break
+			}
+			for _, v := range events {
+				fmt.Printf("%s\n", v.String())
+			}
+		}
 	}
 }
 

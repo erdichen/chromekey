@@ -6,10 +6,10 @@ import (
 	"syscall"
 	"unsafe"
 
-	"erdi.us/chromekey/evdev"
-	"erdi.us/chromekey/evdev/eventcode"
-	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/log"
+	"github.com/erdichen/chromekey/evdev"
+	"github.com/erdichen/chromekey/evdev/eventcode"
+	"github.com/erdichen/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/log"
 	"golang.org/x/sys/unix"
 )
 
@@ -20,15 +20,6 @@ type Setup struct {
 
 	FFEffectsMax uint32
 }
-
-// Marshal converts a Setup struct to binary bytes for ioctl use.
-// func (s *Setup) Marshal() []byte {
-// 	b := &bytes.Buffer{}
-// 	b.Write(s.ID.Marshal())
-// 	b.Write(s.Name[:])
-// 	binary.Write(b, binary.LittleEndian, &s.FFEffectsMax)
-// 	return b.Bytes()
-// }
 
 // Device is a virtual keyboard device.
 type Device struct {
@@ -58,6 +49,7 @@ func CreateDevice(device string, keyBits *keycode.KeyBits) (*Device, error) {
 		}
 	}
 
+	// Pretend we have all these LEDs.
 	keyBits.Set(keycode.Code_KEY_BACK, true)
 	keyBits.Set(keycode.Code_KEY_FORWARD, true)
 	keyBits.Set(keycode.Code_KEY_REFRESH, true)

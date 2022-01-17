@@ -1,4 +1,4 @@
-module erdi.us/chromekey
+module github.com/erdichen/chromekey
 
 go 1.17
 

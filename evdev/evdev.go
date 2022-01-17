@@ -5,9 +5,9 @@ import (
 	"os"
 	"unsafe"
 
-	"erdi.us/chromekey/evdev/eventcode"
-	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/ioc"
+	"github.com/erdichen/chromekey/evdev/eventcode"
+	"github.com/erdichen/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/ioc"
 	"golang.org/x/sys/unix"
 )
 
@@ -167,12 +167,3 @@ type InputID struct {
 	Product uint16
 	Version uint16
 }
-
-// func (id *InputID) Marshal() []byte {
-// 	b := [8]byte{}
-// 	binary.LittleEndian.PutUint16(b[:], id.BusType)
-// 	binary.LittleEndian.PutUint16(b[2:], id.Vendor)
-// 	binary.LittleEndian.PutUint16(b[4:], id.Product)
-// 	binary.LittleEndian.PutUint16(b[6:], id.Version)
-// 	return b[:]
-// }

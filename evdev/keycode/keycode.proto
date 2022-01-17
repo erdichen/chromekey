@@ -1,7 +1,7 @@
 syntax = "proto3";
 package keycode;
 
-option go_package = "erdi.us/chromekey/evdev/keycode";
+option go_package = "github.com/erdichen/chromekey/evdev/keycode";
 
 enum Code {
     option allow_alias = true;

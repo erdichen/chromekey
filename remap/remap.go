@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"syscall"
 	"time"
 
-	"erdi.us/chromekey/evdev"
-	"erdi.us/chromekey/evdev/eventcode"
-	"erdi.us/chromekey/evdev/keycode"
-	"erdi.us/chromekey/log"
-	"erdi.us/chromekey/remap/config"
-	"erdi.us/chromekey/uinput"
+	"github.com/erdichen/chromekey/evdev"
+	"github.com/erdichen/chromekey/evdev/eventcode"
+	"github.com/erdichen/chromekey/evdev/keycode"
+	"github.com/erdichen/chromekey/log"
+	"github.com/erdichen/chromekey/remap/config"
+	"github.com/erdichen/chromekey/uinput"
 )
 
 // State is the data of a key remapper that simulates the FN key that can remap function keys to media keys.
@@ -29,7 +30,7 @@ type State struct {
 }
 
 // New returns new a key remapper.
-func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
+func New(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
 	ok := false
 
 	defer func() {
@@ -60,13 +61,8 @@ func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.Run
 		}
 	}()
 
-	evC := startReadEventsLoop(ctx, in)
-
 	ok = true
-	return &State{in: in, out: out, evC: evC,
-		fnEnable: true,
-		cfg:      cfg,
-	}, nil
+	return &State{in: in, out: out, fnEnable: true, cfg: cfg}, nil
 }
 
 // Close closes a remapper and its input and output devices.
@@ -95,7 +91,7 @@ func (s *State) SetConfig(cfg config.RunConfig) {
 }
 
 // Start runs the execution loop that forwards input events from the real keyboard to the virtual keyboard, remapping keys when necessary.
-func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Duration) error {
+func (s *State) Start(ctx context.Context, sigC chan os.Signal, evC chan []evdev.InputEvent, timeout time.Duration) error {
 	t := time.NewTimer(timeout)
 	if timeout == 0 {
 		t.Stop()
@@ -127,7 +123,11 @@ func (s *State) Start(ctx context.Context, sigC chan os.Signal, timeout time.Dur
 				again = false
 				ledTimer.Reset(250 * time.Millisecond)
 			}
-		case events := <-s.evC:
+		case events, ok := <-evC:
+			if !ok {
+				done = true
+				break
+			}
 			events = s.handleEvents(events)
 			if err := s.out.WriteEvents(events); err != nil {
 				log.Errorf("failed to write events to uinput device: %v", err)
@@ -276,10 +276,13 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	return events
 }
 
-// startReadEventsLoop loops reading input events and sends them to a channel.
-func startReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.InputEvent {
+// StartReadEventsLoop loops reading input events and sends them to a channel.
+func StartReadEventsLoop(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device) chan []evdev.InputEvent {
 	evC := make(chan []evdev.InputEvent)
+	wg.Add(1)
 	go func(ctx context.Context) {
+		defer wg.Done()
+		defer close(evC)
 		for {
 			events, err := in.ReadEvents(ctx)
 			if err != nil {
