@@ -35,7 +35,7 @@ go mod download
 ### Build with cgo
 
 ```
-go build github.com/erdichen/chromekey/cmd/chromekey
+go build
 ```
 
 ### Build without cgo
@@ -43,7 +43,7 @@ go build github.com/erdichen/chromekey/cmd/chromekey
 In case you don't have the C headers for cgo, you can build the pure Go version.
 
 ```
-CGO_ENABLED=0 go build github.com/erdichen/chromekey/cmd/chromekey
+CGO_ENABLED=0 go build
 ```
 
 ## Configuration
