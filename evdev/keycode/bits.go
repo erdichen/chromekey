@@ -26,6 +26,15 @@ func (kb *KeyBits) Set(k Code, b bool) {
 	}
 }
 
+func (kb *KeyBits) IsZero() bool {
+	for _, v := range kb {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
+}
+
 type BitField struct {
 	Data  []byte
 	count uint

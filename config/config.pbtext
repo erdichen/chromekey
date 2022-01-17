@@ -1,82 +1,63 @@
-fn_enabled: true
+fn_enabled:  true
 fn_key:  KEY_F13
-key_map:  {
-  from:  KEY_F9
-  to:  KEY_VOLUMEDOWN
-}
-key_map:  {
-  from:  KEY_BRIGHTNESSDOWN
-  to:  KEY_KBDILLUMDOWN
-}
+use_led:  NUML
 key_map:  {
   from:  KEY_F1
   to:  KEY_BACK
-}
-key_map:  {
-  from:  KEY_F4
-  to:  KEY_F11
-}
-key_map:  {
-  from:  KEY_F7
-  to:  KEY_BRIGHTNESSUP
-}
-key_map:  {
-  from:  KEY_VOLUMEUP
-  to:  KEY_KBDILLUMUP
-}
-key_map:  {
-  from:  KEY_F6
-  to:  KEY_BRIGHTNESSDOWN
-}
-key_map:  {
-  from:  KEY_F8
-  to:  KEY_MUTE
 }
 key_map:  {
   from:  KEY_F2
   to:  KEY_FORWARD
 }
 key_map:  {
-  from:  KEY_F10
-  to:  KEY_VOLUMEUP
-}
-key_map:  {
-  from:  KEY_VOLUMEDOWN
-  to:  KEY_KBDILLUMDOWN
-}
-key_map:  {
   from:  KEY_F3
   to:  KEY_REFRESH
 }
 key_map:  {
-  from:  KEY_BRIGHTNESSUP
-  to:  KEY_KBDILLUMUP
+  from:  KEY_F4
+  to:  KEY_F11
 }
 key_map:  {
   from:  KEY_F5
   to:  KEY_SEARCH
 }
-shift_key_map:  {
+key_map:  {
+  from:  KEY_F6
+  to:  KEY_BRIGHTNESSDOWN
+}
+key_map:  {
   from:  KEY_F7
-  to:  KEY_KBDILLUMUP
+  to:  KEY_BRIGHTNESSUP
+}
+key_map:  {
+  from:  KEY_F8
+  to:  KEY_MUTE
+}
+key_map:  {
+  from:  KEY_F9
+  to:  KEY_VOLUMEDOWN
+}
+key_map:  {
+  from:  KEY_F10
+  to:  KEY_VOLUMEUP
+}
+mod_key_map:  {
+  from:  KEY_BACKSPACE
+  to:  KEY_DELETE
 }
 shift_key_map:  {
-  from:  KEY_BRIGHTNESSDOWN
-  to:  KEY_KBDILLUMDOWN
-}
-shift_key_map:  {
-  from:  KEY_BRIGHTNESSUP
-  to:  KEY_KBDILLUMUP
+  from:  KEY_TAB
+  to:  KEY_NUMLOCK
 }
 shift_key_map:  {
   from:  KEY_F6
   to:  KEY_KBDILLUMDOWN
 }
 shift_key_map:  {
+  from:  KEY_F7
+  to:  KEY_KBDILLUMUP
+}
+shift_key_map:  {
   from:  KEY_LEFTMETA
   to:  KEY_CAPSLOCK
-}
-shift_key_map: {
-  from: KEY_TAB
-  to: KEY_NUMLOCK
 }

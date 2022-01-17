@@ -120,17 +120,14 @@ func main() {
 		if err := prototext.Unmarshal(b, &pb); err != nil {
 			log.Fatalf("failed to marshal configuration proto: %v", err)
 		}
-		cfg = config.RunConfig{
-			FnENabled:   pb.FnEnabled,
-			FnKey:       keycode.Code(pb.FnKey),
-			KeyMap:      config.FromPBKeymap(pb.KeyMap),
-			ShiftKeyMap: config.FromPBKeymap(pb.ShiftKeyMap),
-		}
+		cfg = config.FromPBConfig(&pb)
 	} else if *useDefault {
 		cfg = config.DefaultRunConfig()
 	}
 
-	cfg.UseLED = useLED
+	if useLED != keycode.LED_CNT {
+		cfg.UseLED = useLED
+	}
 
 	if fnKey != keycode.Code_KEY_RESERVED {
 		// Overrides FN key in config from flag value.

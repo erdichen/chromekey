@@ -6,6 +6,10 @@ Features:
 
 1. Default mapping of function key to the original Chromebook media keys
 
+    1. Press FN key to toggle FN locked mode
+
+    2. Press FN+key to select the second level alternate key
+
 2. Support third-level key mapping with FN+Shift+key combinations
 
     1. FN+Shift+brightness up/down control keyboard backlights
@@ -46,12 +50,6 @@ CGO_ENABLED=0 go build github.com/erdichen/chromekey/cmd/chromekey
 
 First pick a key as the `FN` key. I don't use the `Lock` key (at the upper left corner) on my Chromebook, so I turned it into the `FN` key.
 
-### FN key configuration snippet
-
-```
-fn_key:  KEY_F13
-```
-
 ### Create a default configuration file with the `--dump_config` flag.
 
 ```
@@ -62,6 +60,48 @@ fn_key:  KEY_F13
 
 ```
 ./chromekey --show_key
+```
+
+### FN key configuration snippet
+
+```
+fn_key:  KEY_F13
+```
+
+### Set FN lock state on start up
+
+```
+fn_enabled: true
+```
+
+### Map third-level keys for keyboard backlight
+
+Use `FN+shift+F6/F7` for keyboard backlight adjustment:
+
+```
+shift_key_map:  {
+  from:  KEY_F6
+  to:  KEY_KBDILLUMDOWN
+}
+shift_key_map:  {
+  from:  KEY_BRIGHTNESSDOWN
+  to:  KEY_KBDILLUMDOWN
+}
+shift_key_map:  {
+  from:  KEY_F7
+  to:  KEY_KBDILLUMUP
+}
+```
+
+### Add additional key map that uses FN key as a modifier
+
+For example, press FN+backspace to send the DELETE key:
+
+```
+mod_key_map:  {
+  from:  KEY_BACKSPACE
+  to:  KEY_DELETE
+}
 ```
 
 ## Installation
@@ -96,6 +136,12 @@ NOTE: Don't use this option if you have an external USB keyboard with a numpad.
 ExecStart=/usr/local/bin/chromekey --use_led=NUML
 ```
 
+Or add this flag to your configuration file:
+
+```
+use_led: NUML
+```
+
 ### Add a udev rule to trigger the systemd service
 
 ```
@@ -107,3 +153,4 @@ EOF
 ### Nice Addition
 
 Install a [Lock Keys](https://extensions.gnome.org/extension/36/lock-keys/) Gnome Shell extension to show LED status on screen.
+
