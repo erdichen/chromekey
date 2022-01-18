@@ -6,7 +6,7 @@ Features:
 
 1. Default mapping of function key to the original Chromebook media keys
 
-    1. Press FN key to toggle FN locked mode
+    1. Press the FN key to toggle the FN locked mode
 
     2. Press FN+key to select the second level alternate key
 
@@ -14,7 +14,7 @@ Features:
 
     1. FN+Shift+brightness up/down control keyboard backlights
 
-3. Optionally take over an keyboard LED as FN key lock LED.
+3. Optionally take over an keyboard LED as the FN key lock LED.
 
 ## Build the binary
 
@@ -68,7 +68,7 @@ Stop any running instance to release the grab on the keyboard device first.
 fn_key:  KEY_F13
 ```
 
-### Set FN lock state on start up
+### Set the FN lock state on start up
 
 ```
 fn_enabled: true
@@ -89,7 +89,7 @@ shift_key_map:  {
 }
 ```
 
-### Add additional key map that uses FN key as a modifier
+### Add additional key map that uses the FN key as a modifier
 
 For example, press FN+backspace to send the DELETE key:
 
@@ -100,6 +100,14 @@ mod_key_map:  {
 }
 ```
 
+#### Optional: Use the Num Lock LED as the FN Lock LED
+
+NOTE: Don't use this option if you have an external USB keyboard with a numpad.
+
+```
+use_led: NUML
+```
+
 ## Installation
 
 ### Copy the binary to `/usr/local/bin`
@@ -108,40 +116,20 @@ mod_key_map:  {
 sudo cp ./chromekey /usr/local/bin
 ```
 
+### Copy the configuration file to `/usr/local/etc`
+
+```
+sudo cp chromekey.config /usr/local/etc/
+```
+
 ### Add a simple systemd service unit file
 
 ```
 sudo tee /etc/systemd/system/chromekey.service <<EOF
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/chromekey
-EOF
-```
-
-#### Don't forget to add the `-config_file` in case you use a configuration file.
-
-```
 ExecStart=/usr/local/bin/chromekey -config_file=/usr/local/etc/chromekey.config
-```
-
-### Optional: Install the bash completion file
-
-```
-sudo cp config/chromekey.completion /etc/bash_completion.d/chromekey
-```
-
-#### Optional: Use Num Lock LED as FN Lock LED
-
-NOTE: Don't use this option if you have an external USB keyboard with a numpad.
-
-```
-ExecStart=/usr/local/bin/chromekey -use_led=NUML
-```
-
-Or add this flag to your configuration file:
-
-```
-use_led: NUML
+EOF
 ```
 
 ### Add a udev rule to trigger the systemd service
@@ -150,6 +138,12 @@ use_led: NUML
 sudo tee /etc/udev/rules.d/99-chromekey.rules <<EOF
 ACTION=="add", ATTRS{name}=="AT Translated Set 2 keyboard", TAG+="systemd", ENV{SYSTEMD_WANTS}="chromekey.service"
 EOF
+```
+
+### Optional: Install the bash completion file
+
+```
+sudo cp config/chromekey.completion /etc/bash_completion.d/chromekey
 ```
 
 ### Nice Addition
