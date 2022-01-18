@@ -95,7 +95,7 @@ func DefaultRunConfig() RunConfig {
 	return RunConfig{
 		FnKey:       keycode.Code_KEY_F13,
 		KeyMap:      defaultFnKeyMap(),
-		ModKeyMap:   map[keycode.Code]keycode.Code{},
+		ModKeyMap:   defaultModKeyMap(),
 		ShiftKeyMap: defaultShiftKeyMap(),
 	}
 }

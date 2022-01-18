@@ -14,8 +14,6 @@ Features:
 
     1. FN+Shift+brightness up/down control keyboard backlights
 
-    2. FN+Shift+Search toggles Cap Lock
-
 3. Optionally take over an keyboard LED as FN key lock LED.
 
 ## Build the binary
@@ -50,16 +48,18 @@ CGO_ENABLED=0 go build
 
 First pick a key as the `FN` key. I don't use the `Lock` key (at the upper left corner) on my Chromebook, so I turned it into the `FN` key.
 
-### Create a default configuration file with the `--dump_config` flag.
+### Create a default configuration file with the `-dump_config` flag.
 
 ```
-./chromekey --dump_config > chromekey.config
+./chromekey -dump_config > chromekey.config
 ```
 
-### Use the `--show_key` flag to find key names
+### Use the `-show_key` flag to find key names
+
+Stop any running instance to release the grab on the keyboard device first.
 
 ```
-./chromekey --show_key
+./chromekey -show_key
 ```
 
 ### FN key configuration snippet
@@ -81,10 +81,6 @@ Use `FN+shift+F6/F7` for keyboard backlight adjustment:
 ```
 shift_key_map:  {
   from:  KEY_F6
-  to:  KEY_KBDILLUMDOWN
-}
-shift_key_map:  {
-  from:  KEY_BRIGHTNESSDOWN
   to:  KEY_KBDILLUMDOWN
 }
 shift_key_map:  {
@@ -122,18 +118,24 @@ ExecStart=/usr/local/bin/chromekey
 EOF
 ```
 
-#### Don't forget to add the `--config_file` in case you use a configuration file.
+#### Don't forget to add the `-config_file` in case you use a configuration file.
 
 ```
-ExecStart=/usr/local/bin/chromekey --config_file=/usr/local/etc/chromekey.config
+ExecStart=/usr/local/bin/chromekey -config_file=/usr/local/etc/chromekey.config
 ```
 
-#### Optional: Use NUM_LOCK LED as FN Lock LED
+### Optional: Install the bash completion file
+
+```
+sudo cp config/chromekey.completion /etc/bash_completion.d/chromekey
+```
+
+#### Optional: Use Num Lock LED as FN Lock LED
 
 NOTE: Don't use this option if you have an external USB keyboard with a numpad.
 
 ```
-ExecStart=/usr/local/bin/chromekey --use_led=NUML
+ExecStart=/usr/local/bin/chromekey -use_led=NUML
 ```
 
 Or add this flag to your configuration file:

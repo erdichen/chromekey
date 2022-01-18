@@ -42,12 +42,44 @@ key_map:  {
   to:  KEY_VOLUMEUP
 }
 mod_key_map:  {
+  from:  KEY_MINUS
+  to:  KEY_F11
+}
+mod_key_map:  {
+  from:  KEY_EQUAL
+  to:  KEY_F12
+}
+mod_key_map:  {
   from:  KEY_BACKSPACE
   to:  KEY_DELETE
 }
-shift_key_map:  {
+mod_key_map:  {
   from:  KEY_TAB
   to:  KEY_NUMLOCK
+}
+mod_key_map:  {
+  from:  KEY_DOT
+  to:  KEY_INSERT
+}
+mod_key_map:  {
+  from:  KEY_UP
+  to:  KEY_PAGEUP
+}
+mod_key_map:  {
+  from:  KEY_LEFT
+  to:  KEY_HOME
+}
+mod_key_map:  {
+  from:  KEY_RIGHT
+  to:  KEY_END
+}
+mod_key_map:  {
+  from:  KEY_DOWN
+  to:  KEY_PAGEDOWN
+}
+mod_key_map:  {
+  from:  KEY_LEFTMETA
+  to:  KEY_CAPSLOCK
 }
 shift_key_map:  {
   from:  KEY_F6
@@ -56,8 +88,4 @@ shift_key_map:  {
 shift_key_map:  {
   from:  KEY_F7
   to:  KEY_KBDILLUMUP
-}
-shift_key_map:  {
-  from:  KEY_LEFTMETA
-  to:  KEY_CAPSLOCK
 }
