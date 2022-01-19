@@ -121,10 +121,10 @@ func openInputDevice(devDir string) (*evdev.Device, error) {
 		}
 		log.Infof("Device name: %v", name)
 		if strings.Contains(name, "Chromebook") {
-			log.Infof("Opened keyboard input device: %v,", file)
+			log.Infof("Opened keyboard input device: %v", file)
 			return dev, nil
 		}
-		log.Infof("Skipped non-test input device: %v,", file)
+		log.Infof("Skipped non-test input device: %v", file)
 		if err := dev.Close(); err != nil {
 			log.Errorf("failed to close an evdev device: %v", err)
 		}

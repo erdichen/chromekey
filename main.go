@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync"
 	"syscall"
 
 	"github.com/erdichen/chromekey/evdev"
@@ -163,25 +162,19 @@ func main() {
 		in = d
 	}
 
-	var wg sync.WaitGroup
-	defer func() {
-		cancel()
-		wg.Wait()
-	}()
-
 	if *showKey {
-		readAndPrintKeys(ctx, &wg, in, sigC)
+		readAndPrintKeys(ctx, in, sigC)
 		return
 	}
 
 	// Create new remapper instance.
-	s, err := remap.New(ctx, &wg, in, *uinputDev, cfg, *grab)
+	s, err := remap.New(ctx, in, *uinputDev, cfg, *grab)
 	if err != nil {
 		log.Fatalf("failed to create key remapper: %v", err)
 	}
 	defer s.Close()
 
-	evC := remap.StartReadEventsLoop(ctx, &wg, in)
+	evC := remap.StartReadEventsLoop(ctx, in)
 
 	// Start the remapper event loop.
 	if err := s.Start(ctx, sigC, evC, *timeout); err != nil {
@@ -190,9 +183,9 @@ func main() {
 }
 
 // readAndPrintKeys prints keycodes to help with writing the configuration file.
-func readAndPrintKeys(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device, sigC chan os.Signal) {
+func readAndPrintKeys(ctx context.Context, in *evdev.Device, sigC chan os.Signal) {
 	defer in.Close()
-	evC := remap.StartReadEventsLoop(ctx, wg, in)
+	evC := remap.StartReadEventsLoop(ctx, in)
 	done := false
 	for !done {
 		select {
@@ -234,12 +227,12 @@ func openInputDevice(devDir string) (*evdev.Device, error) {
 		}
 		if dev.IsKeyboard() {
 			if *verbosity > 1 {
-				log.Infof("Opened keyboard input device: %v,", file)
+				log.Infof("Opened keyboard input device: %v", file)
 			}
 			return dev, nil
 		}
 		if *verbosity > 1 {
-			log.Infof("Skipped non-keyboard input device: %v,", file)
+			log.Infof("Skipped non-keyboard input device: %v", file)
 		}
 		if err := dev.Close(); err != nil {
 			log.Errorf("failed to close an evdev device: %v", err)

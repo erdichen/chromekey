@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
 	"syscall"
 	"time"
 
@@ -30,7 +29,7 @@ type State struct {
 }
 
 // New returns new a key remapper.
-func New(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
+func New(ctx context.Context, in *evdev.Device, outputDev string, cfg config.RunConfig, grab bool) (*State, error) {
 	ok := false
 
 	defer func() {
@@ -290,11 +289,9 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 }
 
 // StartReadEventsLoop loops reading input events and sends them to a channel.
-func StartReadEventsLoop(ctx context.Context, wg *sync.WaitGroup, in *evdev.Device) chan []evdev.InputEvent {
+func StartReadEventsLoop(ctx context.Context, in *evdev.Device) chan []evdev.InputEvent {
 	evC := make(chan []evdev.InputEvent)
-	wg.Add(1)
 	go func(ctx context.Context) {
-		defer wg.Done()
 		defer close(evC)
 		for {
 			events, err := in.ReadEvents(ctx)
