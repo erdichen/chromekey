@@ -16,9 +16,9 @@ func init() {
 
 func Errorf(format string, v ...interface{}) {
 	if !isTerm {
-		log.Printf(format, v...)
+		journal.Print(journal.PriAlert, format, v...)
 	}
-	journal.Print(journal.PriAlert, format, v...)
+	log.Printf(format, v...)
 }
 
 func Fatalf(format string, v ...interface{}) {

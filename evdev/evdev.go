@@ -2,12 +2,18 @@ package evdev
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"unsafe"
 
 	"github.com/erdichen/chromekey/evdev/eventcode"
 	"github.com/erdichen/chromekey/evdev/keycode"
 	"github.com/erdichen/chromekey/ioc"
+	"github.com/erdichen/chromekey/log"
 	"golang.org/x/sys/unix"
 )
 
@@ -40,7 +46,9 @@ func OpenDevice(device string) (*Device, error) {
 }
 
 func (in *Device) Close() error {
-	return in.f.Close()
+	f := in.f
+	in.f = nil
+	return f.Close()
 }
 
 func (in *Device) IsKeyboard() bool {
@@ -166,4 +174,66 @@ type InputID struct {
 	Vendor  uint16
 	Product uint16
 	Version uint16
+}
+
+// OpenByName opens event devices in a directory that contains kbdName.
+func OpenByName(devDir string, kbdName string, verbosity int) (*Device, error) {
+	files, err := ioutil.ReadDir(devDir)
+	if err != nil {
+		return nil, err
+	}
+
+	var file string
+	var name string
+	var dev *Device
+	var errList []error
+
+	for _, v := range files {
+		if !strings.HasPrefix(v.Name(), "event") {
+			continue
+		}
+		file = filepath.Join(devDir, v.Name())
+		d, err := OpenDevice(file)
+		if err != nil {
+			errList = append(errList, err)
+			continue
+		}
+		// defer d.Close()
+		name, err = d.GetName()
+		if err != nil {
+			errList = append(errList, err)
+			continue
+		}
+		if kbdName != "" {
+			// Match by name
+			if strings.Contains(name, kbdName) {
+				dev = d
+				d = nil
+				break
+			}
+		} else if d.IsKeyboard() {
+			// Or use first keyboard device
+			dev = d
+			d = nil
+			break
+		}
+		if verbosity > 1 {
+			log.Infof("Skipped non-keyboard input device: %v : %v", file, name)
+		}
+		if err := d.Close(); err != nil {
+			log.Errorf("failed to close an evdev device: %v", err)
+		}
+	}
+
+	if dev == nil {
+		if len(errList) == 0 {
+			return nil, errors.New("found no input device")
+		}
+		return nil, fmt.Errorf("found no input device: %v", errList)
+	}
+
+	if verbosity > 1 {
+		log.Infof("Opened keyboard input device: %v : %v", file, name)
+	}
+	return dev, nil
 }

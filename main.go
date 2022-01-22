@@ -3,14 +3,11 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/erdichen/chromekey/evdev"
@@ -62,6 +59,7 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "\n")
 	}
 	devicePath := flag.String("input_device", "", "Keyboard input device")
+	keyboardName := flag.String("keyboard_name", "AT Translated", "Open keyboard input device by name sub-string")
 	inputDevDir := flag.String("evdev_dir", "/dev/input", "Keyboard input device directory")
 	uinputDev := flag.String("uinput", "/dev/uinput", "User input event injection device")
 	timeout := flag.Duration("timeout", 0, "Exit after seconds since last event (0=disable)")
@@ -155,7 +153,7 @@ func main() {
 	}
 	// If devicePath does not specify a valid device, try to open an input device in the inputDevDir directory.
 	if in == nil {
-		d, err := openInputDevice(*inputDevDir)
+		d, err := evdev.OpenByName(*inputDevDir, *keyboardName, *verbosity)
 		if err != nil {
 			log.Fatalf("failed to create open evdev device: %v", err)
 		}
@@ -206,42 +204,4 @@ func readAndPrintKeys(ctx context.Context, in *evdev.Device, sigC chan os.Signal
 			}
 		}
 	}
-}
-
-// openInputDevice opens event devices in a directory to find the first keyboard device.
-func openInputDevice(devDir string) (*evdev.Device, error) {
-	files, err := ioutil.ReadDir(devDir)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range files {
-		if !strings.HasPrefix(v.Name(), "event") {
-			continue
-		}
-		file := filepath.Join(devDir, v.Name())
-		dev, e := evdev.OpenDevice(file)
-		if e != nil {
-			err = e
-			continue
-		}
-		if dev.IsKeyboard() {
-			if *verbosity > 1 {
-				log.Infof("Opened keyboard input device: %v", file)
-			}
-			return dev, nil
-		}
-		if *verbosity > 1 {
-			log.Infof("Skipped non-keyboard input device: %v", file)
-		}
-		if err := dev.Close(); err != nil {
-			log.Errorf("failed to close an evdev device: %v", err)
-		}
-	}
-
-	if err == nil {
-		err = errors.New("found no input device")
-	}
-
-	return nil, err
 }
