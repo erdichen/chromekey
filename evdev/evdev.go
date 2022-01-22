@@ -64,17 +64,17 @@ func (in *Device) IsKeyboard() bool {
 func (in *Device) ReadEvents(ctx context.Context) ([]InputEvent, error) {
 	buf := [EventSize * 64]byte{}
 
-	n, err := in.f.Read(buf[:])
+	bufSize, err := in.f.Read(buf[:])
 	if err != nil {
 		return nil, err
 	}
 
-	cnt := n / EventSize
+	cnt := bufSize / EventSize
 	events := make([]InputEvent, cnt)
 
-	b := buf[:n]
+	b := buf[:bufSize]
 	for i := 0; len(b) >= EventSize; i++ {
-		n, err := events[i].unmarshal(b[:n])
+		n, err := events[i].unmarshal(b)
 		if err != nil {
 			return nil, err
 		}
