@@ -15,7 +15,8 @@ message KeymapConfig {
     keycode.Code fn_key = 2;
     optional keycode.LED use_led = 3;
     // Reserved tags here for future non-repeating fields.
-    repeated KeymapEntry key_map = 10;		    // FN locked
-    repeated KeymapEntry mod_key_map = 11;	    // FN+key
-    repeated KeymapEntry shift_key_map = 12;	// FN+shift+key
+    repeated keycode.Code third_level_key = 19;         // FN+3rd_level+key
+    repeated KeymapEntry key_map = 20;                  // FN locked
+    repeated KeymapEntry mod_key_map = 21;              // FN+key
+    repeated KeymapEntry third_level_key_map = 22;      // FN+3rd_level+key
 }

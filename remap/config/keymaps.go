@@ -32,7 +32,7 @@ func defaultModKeyMap() map[keycode.Code]keycode.Code {
 	}
 }
 
-func defaultShiftKeyMap() map[keycode.Code]keycode.Code {
+func defaultThirdLevelKeyMap() map[keycode.Code]keycode.Code {
 	return map[keycode.Code]keycode.Code{
 		keycode.Code_KEY_F6: keycode.Code_KEY_KBDILLUMDOWN,
 		keycode.Code_KEY_F7: keycode.Code_KEY_KBDILLUMUP,

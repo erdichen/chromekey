@@ -74,16 +74,23 @@ fn_key:  KEY_F13
 fn_enabled: true
 ```
 
-### Map third-level keys for keyboard backlight
-
-Use `FN+shift+F6/F7` for keyboard backlight adjustment:
+### Set third-level keys for `FN+Shift+` key maps
 
 ```
-shift_key_map:  {
+third_level_key:  KEY_LEFTSHIFT
+third_level_key:  KEY_RIGHTSHIFT
+```
+
+### Map third-level keys for keyboard backlight
+
+Use `FN+Shift+F6/F7` for keyboard backlight adjustment:
+
+```
+third_level_key_map:  {
   from:  KEY_F6
   to:  KEY_KBDILLUMDOWN
 }
-shift_key_map:  {
+third_level_key_map:  {
   from:  KEY_F7
   to:  KEY_KBDILLUMUP
 }

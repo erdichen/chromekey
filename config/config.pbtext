@@ -1,6 +1,7 @@
 fn_enabled:  true
 fn_key:  KEY_F13
 use_led:  NUML
+third_level_key:  KEY_RIGHTSHIFT
 key_map:  {
   from:  KEY_F1
   to:  KEY_BACK
@@ -81,11 +82,11 @@ mod_key_map:  {
   from:  KEY_LEFTMETA
   to:  KEY_CAPSLOCK
 }
-shift_key_map:  {
+third_level_key_map:  {
   from:  KEY_F6
   to:  KEY_KBDILLUMDOWN
 }
-shift_key_map:  {
+third_level_key_map:  {
   from:  KEY_F7
   to:  KEY_KBDILLUMUP
 }

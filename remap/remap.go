@@ -209,6 +209,16 @@ func (s *State) setFnLED() {
 	}
 }
 
+// isThirdLevelKeyDown returns true if any third level key is down.
+func (s *State) isThirdLevelKeyDown() bool {
+	for _, k := range s.cfg.ThirdLevelKey {
+		if s.keys.Get(k) {
+			return true
+		}
+	}
+	return false
+}
+
 // handleEvents converts key events to mapped key events if it matches the mapping rules.
 func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 	var pre, post []evdev.InputEvent
@@ -234,24 +244,21 @@ func (s *State) handleEvents(events []evdev.InputEvent) []evdev.InputEvent {
 				}
 				events[i].Code = uint16(keycode.Code_KEY_FN)
 			default:
-				isShiftDown := s.keys.Get(keycode.Code_KEY_LEFTSHIFT) || s.keys.Get(keycode.Code_KEY_RIGHTSHIFT)
-				if isShiftDown {
-					// Handle FN+Shift+ key map.
-					if key, ok := s.cfg.ShiftKeyMap[keycode.Code(ev.Code)]; ok {
+				if s.isThirdLevelKeyDown() {
+					// Handle FN+ThirdLevelKey+ key map.
+					if key, ok := s.cfg.ThirdLevelKeyMap[keycode.Code(ev.Code)]; ok {
 						fnDown := s.keys.Get(s.cfg.FnKey)
 						if fnDown {
-							// Clear the shift keys to simulate the mapped key with the shift keys released.
-							if s.keys.Get(keycode.Code_KEY_LEFTSHIFT) {
-								pre = append(pre, GenKey(keycode.Code_KEY_LEFTSHIFT, 0)...)
-								post = append(post, GenKey(keycode.Code_KEY_LEFTSHIFT, 1)...)
-							}
-							if s.keys.Get(keycode.Code_KEY_RIGHTSHIFT) {
-								pre = append(pre, GenKey(keycode.Code_KEY_RIGHTSHIFT, 0)...)
-								post = append(post, GenKey(keycode.Code_KEY_RIGHTSHIFT, 1)...)
+							// Clear the third level keys to simulate the mapped key with the third level keys released.
+							for _, k := range s.cfg.ThirdLevelKey {
+								if s.keys.Get(k) {
+									pre = append(pre, GenKey(k, 0)...)
+									post = append(post, GenKey(k, 1)...)
+								}
 							}
 							events[i].Code = uint16(key)
 							if verbosity > 0 {
-								log.Infof("shift map %v to %v", keycode.Code(ev.Code), key)
+								log.Infof("third level map %v to %v", keycode.Code(ev.Code), key)
 							}
 						}
 					}
